@@ -8,6 +8,7 @@ completed_phases:
 - phase-4-arc-wave-design
 - phase-5-opening-matrix
 - phase-6-middle-matrix
+- phase-7-endgame-matrix
 completion_log:
 - phase_id: phase-0-premise-promise
   completed_at: '2026-05-01T02:51:27Z'
@@ -53,5 +54,12 @@ completion_log:
     the false solve, Han Songyuan's reversal, and the exposure of the living witness.
   next_focus: Promote phase-7 into a formal contract and map the endgame pursuit,
     false handoff, terminal showdown, and aftermath into final scene cards.
-updated_at: '2026-05-01T03:01:46Z'
+- phase_id: phase-7-endgame-matrix
+  completed_at: '2026-05-01T03:03:00Z'
+  summary: Built the endgame convergence matrix with six final scene cards covering
+    the signal-gap hunt, false handoff, public evidence play, terminal showdown, and
+    aftershock.
+  next_focus: Promote phase-8 into a formal contract and draft the opening movement
+    in full prose from boarding through the first suspect net.
+updated_at: '2026-05-01T03:03:00Z'
 finalized_at: 

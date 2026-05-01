@@ -6,29 +6,29 @@
 
 - State file: `plan/state.yaml`
 - Handoff file: `plan/handoff.md`
-- Updated at: `2026-05-01T03:01:46Z`
-- Completed phases: `phase-0-premise-promise, phase-1-cast-engine, phase-2-truth-lattice, phase-3-route-pressure, phase-4-arc-wave-design, phase-5-opening-matrix, phase-6-middle-matrix`
+- Updated at: `2026-05-01T03:03:00Z`
+- Completed phases: `phase-0-premise-promise, phase-1-cast-engine, phase-2-truth-lattice, phase-3-route-pressure, phase-4-arc-wave-design, phase-5-opening-matrix, phase-6-middle-matrix, phase-7-endgame-matrix`
 
 ## 最近完成
 
-- `phase-4-arc-wave-design` Map the macro arc and suspense waves: Mapped the whole-novel arc into ten macro beats and an eleven-node suspense/relationship/action wave pattern anchored by the false solve, midpoint flip, and terminal showdown.
-- next focus: Promote phase-5 into a formal contract and break the opening movement into scene cards for setup, the first murder, and the first suspect net.
 - `phase-5-opening-matrix` Build the opening movement scene matrix: Broke the opening movement into a six-scene matrix covering boarding, the aborted handoff, the first murder, the system lockdown, and the first suspect net.
 - next focus: Promote phase-6 into a formal contract and map the middle-movement trap scenes, false solve, and midpoint flip into concrete scene cards.
 - `phase-6-middle-matrix` Build the middle movement trap matrix: Broke the middle movement into six trap scenes covering the old-case lock-in, the false solve, Han Songyuan's reversal, and the exposure of the living witness.
 - next focus: Promote phase-7 into a formal contract and map the endgame pursuit, false handoff, terminal showdown, and aftermath into final scene cards.
+- `phase-7-endgame-matrix` Build the endgame convergence matrix: Built the endgame convergence matrix with six final scene cards covering the signal-gap hunt, false handoff, public evidence play, terminal showdown, and aftershock.
+- next focus: Promote phase-8 into a formal contract and draft the opening movement in full prose from boarding through the first suspect net.
 
 ## 下一 Phase
 
-- `phase-7-endgame-matrix` Build the endgame convergence matrix
-- plan: `plan/phases/phase-7-endgame-matrix.md`
-- execution: `plan/execution/phase-7-endgame-matrix.md`
-- status: `placeholder contracts need upgrade first (plan/phases/phase-7-endgame-matrix.md, plan/execution/phase-7-endgame-matrix.md)`
+- `phase-8-opening-draft-batch` Draft the opening movement
+- plan: `plan/phases/phase-8-opening-draft-batch.md`
+- execution: `plan/execution/phase-8-opening-draft-batch.md`
+- status: `placeholder contracts need upgrade first (plan/phases/phase-8-opening-draft-batch.md, plan/execution/phase-8-opening-draft-batch.md)`
 
 下一步读取顺序：
 1. `plan/common.md`
-2. `plan/phases/phase-7-endgame-matrix.md`
-3. `plan/execution/phase-7-endgame-matrix.md`
+2. `plan/phases/phase-8-opening-draft-batch.md`
+3. `plan/execution/phase-8-opening-draft-batch.md`
 
 ## 压缩恢复顺序
 
