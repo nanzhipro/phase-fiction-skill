@@ -6,29 +6,29 @@
 
 - State file: `plan/state.yaml`
 - Handoff file: `plan/handoff.md`
-- Updated at: `2026-05-01T03:05:16Z`
-- Completed phases: `phase-0-premise-promise, phase-1-cast-engine, phase-2-truth-lattice, phase-3-route-pressure, phase-4-arc-wave-design, phase-5-opening-matrix, phase-6-middle-matrix, phase-7-endgame-matrix, phase-8-opening-draft-batch`
+- Updated at: `2026-05-01T03:07:18Z`
+- Completed phases: `phase-0-premise-promise, phase-1-cast-engine, phase-2-truth-lattice, phase-3-route-pressure, phase-4-arc-wave-design, phase-5-opening-matrix, phase-6-middle-matrix, phase-7-endgame-matrix, phase-8-opening-draft-batch, phase-9-middle-draft-batch`
 
 ## 最近完成
 
-- `phase-6-middle-matrix` Build the middle movement trap matrix: Broke the middle movement into six trap scenes covering the old-case lock-in, the false solve, Han Songyuan's reversal, and the exposure of the living witness.
-- next focus: Promote phase-7 into a formal contract and map the endgame pursuit, false handoff, terminal showdown, and aftermath into final scene cards.
 - `phase-7-endgame-matrix` Build the endgame convergence matrix: Built the endgame convergence matrix with six final scene cards covering the signal-gap hunt, false handoff, public evidence play, terminal showdown, and aftershock.
 - next focus: Promote phase-8 into a formal contract and draft the opening movement in full prose from boarding through the first suspect net.
 - `phase-8-opening-draft-batch` Draft the opening movement: Drafted the opening prose from boarding through the first suspect net, including the aborted handoff, the windcut murder, and the reveal of the crossed-out children's surnames.
 - next focus: Promote phase-9 into a formal contract and draft the middle movement in full prose from clue lock-in through witness exposure.
+- `phase-9-middle-draft-batch` Draft the middle movement: Drafted the middle prose from the clue lock-in through the false solve, Han Songyuan's reversal, and the exposure of Aruna as the living witness.
+- next focus: Promote phase-10 into a formal contract and draft the endgame in full prose from the signal-gap hunt through the terminal showdown and aftermath.
 
 ## 下一 Phase
 
-- `phase-9-middle-draft-batch` Draft the middle movement
-- plan: `plan/phases/phase-9-middle-draft-batch.md`
-- execution: `plan/execution/phase-9-middle-draft-batch.md`
-- status: `placeholder contracts need upgrade first (plan/phases/phase-9-middle-draft-batch.md, plan/execution/phase-9-middle-draft-batch.md)`
+- `phase-10-endgame-draft-batch` Draft the endgame movement
+- plan: `plan/phases/phase-10-endgame-draft-batch.md`
+- execution: `plan/execution/phase-10-endgame-draft-batch.md`
+- status: `placeholder contracts need upgrade first (plan/phases/phase-10-endgame-draft-batch.md, plan/execution/phase-10-endgame-draft-batch.md)`
 
 下一步读取顺序：
 1. `plan/common.md`
-2. `plan/phases/phase-9-middle-draft-batch.md`
-3. `plan/execution/phase-9-middle-draft-batch.md`
+2. `plan/phases/phase-10-endgame-draft-batch.md`
+3. `plan/execution/phase-10-endgame-draft-batch.md`
 
 ## 压缩恢复顺序
 

@@ -10,6 +10,7 @@ completed_phases:
 - phase-6-middle-matrix
 - phase-7-endgame-matrix
 - phase-8-opening-draft-batch
+- phase-9-middle-draft-batch
 completion_log:
 - phase_id: phase-0-premise-promise
   completed_at: '2026-05-01T02:51:27Z'
@@ -69,5 +70,11 @@ completion_log:
     children's surnames.
   next_focus: Promote phase-9 into a formal contract and draft the middle movement
     in full prose from clue lock-in through witness exposure.
-updated_at: '2026-05-01T03:05:16Z'
+- phase_id: phase-9-middle-draft-batch
+  completed_at: '2026-05-01T03:07:18Z'
+  summary: Drafted the middle prose from the clue lock-in through the false solve,
+    Han Songyuan's reversal, and the exposure of Aruna as the living witness.
+  next_focus: Promote phase-10 into a formal contract and draft the endgame in full
+    prose from the signal-gap hunt through the terminal showdown and aftermath.
+updated_at: '2026-05-01T03:07:18Z'
 finalized_at: 
