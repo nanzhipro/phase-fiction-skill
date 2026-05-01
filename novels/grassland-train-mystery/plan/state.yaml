@@ -12,6 +12,7 @@ completed_phases:
 - phase-8-opening-draft-batch
 - phase-9-middle-draft-batch
 - phase-10-endgame-draft-batch
+- phase-11-structural-revision
 completion_log:
 - phase_id: phase-0-premise-promise
   completed_at: '2026-05-01T02:51:27Z'
@@ -83,5 +84,12 @@ completion_log:
     gambit, terminal showdown, witness testimony, and the aftershock at Wulesu Station.
   next_focus: Promote phase-11 into a formal contract and run a structural suspense
     revision pass across the full manuscript and supporting tension artifacts.
-updated_at: '2026-05-01T03:09:22Z'
+- phase_id: phase-11-structural-revision
+  completed_at: '2026-05-01T03:12:07Z'
+  summary: Ran a structural suspense revision pass that strengthened the false-solution
+    pressure, clarified the deeper system-coverup layer, and made Wu Kailin's endgame
+    pivot explicit in action.
+  next_focus: Run finalize, inspect the final dashboard against the ledger and git
+    history, and hand the completed novel plan back with concrete human next steps.
+updated_at: '2026-05-01T03:12:07Z'
 finalized_at: 

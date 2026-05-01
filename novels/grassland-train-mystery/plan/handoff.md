@@ -6,29 +6,21 @@
 
 - State file: `plan/state.yaml`
 - Handoff file: `plan/handoff.md`
-- Updated at: `2026-05-01T03:09:22Z`
-- Completed phases: `phase-0-premise-promise, phase-1-cast-engine, phase-2-truth-lattice, phase-3-route-pressure, phase-4-arc-wave-design, phase-5-opening-matrix, phase-6-middle-matrix, phase-7-endgame-matrix, phase-8-opening-draft-batch, phase-9-middle-draft-batch, phase-10-endgame-draft-batch`
+- Updated at: `2026-05-01T03:12:07Z`
+- Completed phases: `phase-0-premise-promise, phase-1-cast-engine, phase-2-truth-lattice, phase-3-route-pressure, phase-4-arc-wave-design, phase-5-opening-matrix, phase-6-middle-matrix, phase-7-endgame-matrix, phase-8-opening-draft-batch, phase-9-middle-draft-batch, phase-10-endgame-draft-batch, phase-11-structural-revision`
 
 ## 最近完成
 
-- `phase-8-opening-draft-batch` Draft the opening movement: Drafted the opening prose from boarding through the first suspect net, including the aborted handoff, the windcut murder, and the reveal of the crossed-out children's surnames.
-- next focus: Promote phase-9 into a formal contract and draft the middle movement in full prose from clue lock-in through witness exposure.
 - `phase-9-middle-draft-batch` Draft the middle movement: Drafted the middle prose from the clue lock-in through the false solve, Han Songyuan's reversal, and the exposure of Aruna as the living witness.
 - next focus: Promote phase-10 into a formal contract and draft the endgame in full prose from the signal-gap hunt through the terminal showdown and aftermath.
 - `phase-10-endgame-draft-batch` Draft the endgame movement: Drafted the endgame prose from the signal-gap hunt through the broadcast gambit, terminal showdown, witness testimony, and the aftershock at Wulesu Station.
 - next focus: Promote phase-11 into a formal contract and run a structural suspense revision pass across the full manuscript and supporting tension artifacts.
+- `phase-11-structural-revision` Run the structural suspense revision: Ran a structural suspense revision pass that strengthened the false-solution pressure, clarified the deeper system-coverup layer, and made Wu Kailin's endgame pivot explicit in action.
+- next focus: Run finalize, inspect the final dashboard against the ledger and git history, and hand the completed novel plan back with concrete human next steps.
 
 ## 下一 Phase
 
-- `phase-11-structural-revision` Run the structural suspense revision
-- plan: `plan/phases/phase-11-structural-revision.md`
-- execution: `plan/execution/phase-11-structural-revision.md`
-- status: `placeholder contracts need upgrade first (plan/phases/phase-11-structural-revision.md, plan/execution/phase-11-structural-revision.md)`
-
-下一步读取顺序：
-1. `plan/common.md`
-2. `plan/phases/phase-11-structural-revision.md`
-3. `plan/execution/phase-11-structural-revision.md`
+- none
 
 ## 压缩恢复顺序
 
