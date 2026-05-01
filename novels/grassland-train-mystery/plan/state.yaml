@@ -5,6 +5,7 @@ completed_phases:
 - phase-1-cast-engine
 - phase-2-truth-lattice
 - phase-3-route-pressure
+- phase-4-arc-wave-design
 completion_log:
 - phase_id: phase-0-premise-promise
   completed_at: '2026-05-01T02:51:27Z'
@@ -31,5 +32,11 @@ completion_log:
     approach to the terminal.
   next_focus: Promote phase-4 into a formal contract and map the macro suspense arc,
     reversals, and pressure-wave pattern across the whole novel.
-updated_at: '2026-05-01T02:58:04Z'
+- phase_id: phase-4-arc-wave-design
+  completed_at: '2026-05-01T02:59:22Z'
+  summary: Mapped the whole-novel arc into ten macro beats and an eleven-node suspense/relationship/action
+    wave pattern anchored by the false solve, midpoint flip, and terminal showdown.
+  next_focus: Promote phase-5 into a formal contract and break the opening movement
+    into scene cards for setup, the first murder, and the first suspect net.
+updated_at: '2026-05-01T02:59:22Z'
 finalized_at: 
