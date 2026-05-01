@@ -6,6 +6,7 @@ completed_phases:
 - phase-2-truth-lattice
 - phase-3-route-pressure
 - phase-4-arc-wave-design
+- phase-5-opening-matrix
 completion_log:
 - phase_id: phase-0-premise-promise
   completed_at: '2026-05-01T02:51:27Z'
@@ -38,5 +39,12 @@ completion_log:
     wave pattern anchored by the false solve, midpoint flip, and terminal showdown.
   next_focus: Promote phase-5 into a formal contract and break the opening movement
     into scene cards for setup, the first murder, and the first suspect net.
-updated_at: '2026-05-01T02:59:22Z'
+- phase_id: phase-5-opening-matrix
+  completed_at: '2026-05-01T03:00:41Z'
+  summary: Broke the opening movement into a six-scene matrix covering boarding, the
+    aborted handoff, the first murder, the system lockdown, and the first suspect
+    net.
+  next_focus: Promote phase-6 into a formal contract and map the middle-movement trap
+    scenes, false solve, and midpoint flip into concrete scene cards.
+updated_at: '2026-05-01T03:00:41Z'
 finalized_at: 

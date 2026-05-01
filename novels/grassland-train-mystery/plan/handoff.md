@@ -6,29 +6,29 @@
 
 - State file: `plan/state.yaml`
 - Handoff file: `plan/handoff.md`
-- Updated at: `2026-05-01T02:59:22Z`
-- Completed phases: `phase-0-premise-promise, phase-1-cast-engine, phase-2-truth-lattice, phase-3-route-pressure, phase-4-arc-wave-design`
+- Updated at: `2026-05-01T03:00:41Z`
+- Completed phases: `phase-0-premise-promise, phase-1-cast-engine, phase-2-truth-lattice, phase-3-route-pressure, phase-4-arc-wave-design, phase-5-opening-matrix`
 
 ## 最近完成
 
-- `phase-2-truth-lattice` Establish the hidden truth and clue lattice: Locked the hidden truth: the old child-transfer crime, the on-train murder purpose, the leverage chain, a 14-item clue ledger, and a 31-node unified timeline.
-- next focus: Promote phase-3 into a formal contract and design the train route, compartment logic, station pressure, and movement constraints around the countdown.
 - `phase-3-route-pressure` Design the route logic and countdown pressure: Turned the train into a pressure system with route hotspots, compartment control nodes, and a countdown timeline tied to stations, signal gaps, and the approach to the terminal.
 - next focus: Promote phase-4 into a formal contract and map the macro suspense arc, reversals, and pressure-wave pattern across the whole novel.
 - `phase-4-arc-wave-design` Map the macro arc and suspense waves: Mapped the whole-novel arc into ten macro beats and an eleven-node suspense/relationship/action wave pattern anchored by the false solve, midpoint flip, and terminal showdown.
 - next focus: Promote phase-5 into a formal contract and break the opening movement into scene cards for setup, the first murder, and the first suspect net.
+- `phase-5-opening-matrix` Build the opening movement scene matrix: Broke the opening movement into a six-scene matrix covering boarding, the aborted handoff, the first murder, the system lockdown, and the first suspect net.
+- next focus: Promote phase-6 into a formal contract and map the middle-movement trap scenes, false solve, and midpoint flip into concrete scene cards.
 
 ## 下一 Phase
 
-- `phase-5-opening-matrix` Build the opening movement scene matrix
-- plan: `plan/phases/phase-5-opening-matrix.md`
-- execution: `plan/execution/phase-5-opening-matrix.md`
-- status: `placeholder contracts need upgrade first (plan/phases/phase-5-opening-matrix.md, plan/execution/phase-5-opening-matrix.md)`
+- `phase-6-middle-matrix` Build the middle movement trap matrix
+- plan: `plan/phases/phase-6-middle-matrix.md`
+- execution: `plan/execution/phase-6-middle-matrix.md`
+- status: `placeholder contracts need upgrade first (plan/phases/phase-6-middle-matrix.md, plan/execution/phase-6-middle-matrix.md)`
 
 下一步读取顺序：
 1. `plan/common.md`
-2. `plan/phases/phase-5-opening-matrix.md`
-3. `plan/execution/phase-5-opening-matrix.md`
+2. `plan/phases/phase-6-middle-matrix.md`
+3. `plan/execution/phase-6-middle-matrix.md`
 
 ## 压缩恢复顺序
 
