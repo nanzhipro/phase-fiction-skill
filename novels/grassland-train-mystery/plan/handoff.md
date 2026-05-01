@@ -6,8 +6,8 @@
 
 - State file: `plan/state.yaml`
 - Handoff file: `plan/handoff.md`
-- Updated at: `2026-05-01T02:54:00Z`
-- Completed phases: `phase-0-premise-promise, phase-1-cast-engine`
+- Updated at: `2026-05-01T02:56:41Z`
+- Completed phases: `phase-0-premise-promise, phase-1-cast-engine, phase-2-truth-lattice`
 
 ## 最近完成
 
@@ -15,18 +15,20 @@
 - next focus: Build the suspect cast, motive lattice, and relationship pressure around Lin Yan and the key passengers.
 - `phase-1-cast-engine` Build the suspect cast and relationship engine: Built the passenger cast engine with nine motive-driven character files and a relationship map covering suspicion, leverage, and future rupture points.
 - next focus: Promote phase-2 into a formal contract and lock the hidden-truth lattice, clue ledger, and unified old-case timeline.
+- `phase-2-truth-lattice` Establish the hidden truth and clue lattice: Locked the hidden truth: the old child-transfer crime, the on-train murder purpose, the leverage chain, a 14-item clue ledger, and a 31-node unified timeline.
+- next focus: Promote phase-3 into a formal contract and design the train route, compartment logic, station pressure, and movement constraints around the countdown.
 
 ## 下一 Phase
 
-- `phase-2-truth-lattice` Establish the hidden truth and clue lattice
-- plan: `plan/phases/phase-2-truth-lattice.md`
-- execution: `plan/execution/phase-2-truth-lattice.md`
-- status: `placeholder contracts need upgrade first (plan/phases/phase-2-truth-lattice.md, plan/execution/phase-2-truth-lattice.md)`
+- `phase-3-route-pressure` Design the route logic and countdown pressure
+- plan: `plan/phases/phase-3-route-pressure.md`
+- execution: `plan/execution/phase-3-route-pressure.md`
+- status: `placeholder contracts need upgrade first (plan/phases/phase-3-route-pressure.md, plan/execution/phase-3-route-pressure.md)`
 
 下一步读取顺序：
 1. `plan/common.md`
-2. `plan/phases/phase-2-truth-lattice.md`
-3. `plan/execution/phase-2-truth-lattice.md`
+2. `plan/phases/phase-3-route-pressure.md`
+3. `plan/execution/phase-3-route-pressure.md`
 
 ## 压缩恢复顺序
 

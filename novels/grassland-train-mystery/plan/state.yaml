@@ -3,6 +3,7 @@ version: 1
 completed_phases:
 - phase-0-premise-promise
 - phase-1-cast-engine
+- phase-2-truth-lattice
 completion_log:
 - phase_id: phase-0-premise-promise
   completed_at: '2026-05-01T02:51:27Z'
@@ -16,5 +17,11 @@ completion_log:
     and a relationship map covering suspicion, leverage, and future rupture points.
   next_focus: Promote phase-2 into a formal contract and lock the hidden-truth lattice,
     clue ledger, and unified old-case timeline.
-updated_at: '2026-05-01T02:54:00Z'
+- phase_id: phase-2-truth-lattice
+  completed_at: '2026-05-01T02:56:41Z'
+  summary: 'Locked the hidden truth: the old child-transfer crime, the on-train murder
+    purpose, the leverage chain, a 14-item clue ledger, and a 31-node unified timeline.'
+  next_focus: Promote phase-3 into a formal contract and design the train route, compartment
+    logic, station pressure, and movement constraints around the countdown.
+updated_at: '2026-05-01T02:56:41Z'
 finalized_at: 
