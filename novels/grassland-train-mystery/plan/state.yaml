@@ -1,0 +1,13 @@
+---
+version: 1
+completed_phases:
+- phase-0-premise-promise
+completion_log:
+- phase_id: phase-0-premise-promise
+  completed_at: '2026-05-01T02:51:27Z'
+  summary: Locked the story promise, failure stakes, hidden-old-case anchor, and reader-facing
+    suspense contract for the steppe train novel.
+  next_focus: Build the suspect cast, motive lattice, and relationship pressure around
+    Lin Yan and the key passengers.
+updated_at: '2026-05-01T02:51:27Z'
+finalized_at: 
