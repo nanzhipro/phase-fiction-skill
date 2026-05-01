@@ -12,6 +12,7 @@ kind: <novel>-fiction-plan-manifest
 project: <项目名>
 entrypoints:
   overview: README.md
+  story_readme: story/README.md
   common: plan/common.md
   workflow: plan/workflow.md
   handoff: plan/handoff.md
@@ -144,6 +145,7 @@ phases:
 - overlay 里的 phase merge 必须通过 `targets` / `anchor_targets` 显式解析当前 profile 的 phase id；不要按 phase 名称相似度猜测“等价 phase”。
 - `repo_policy.mode` 默认应为 `standalone`。只有明确接受嵌入宿主仓库时，才改成 `embedded-explicit`，且不要直接落在 `main` / `master`。
 - `project_profile` 里的目标长度、章节数和 delivery paths 不是说明文字，而是 `doctor` / `finalize` 会消费的项目级门禁。
+- `entrypoints.story_readme` 约定为 `story/README.md`；首次成功 `finalize` 会根据 `story/` 当前文件树自动生成或刷新这份故事资料入口。
 - `depends_on` 只写真依赖，禁止循环。
 - 当 `project_profile.delivery_tier` 是 `full-draft` 或 `serialized-arc` 时，任何会写入 `delivery_paths` 的 phase 默认都必须声明 `artifact_checks`；否则 `complete` 会拒绝写回，`doctor` / `finalize` 也会报问题。
 - 需要机器可验证的 phase，请在 manifest phase 条目里补 `artifact_checks`；`complete` 会在写回 state 前强制执行。
@@ -160,6 +162,7 @@ kind: steppe-train-fiction-plan-manifest
 project: grassland-train-mystery
 entrypoints:
   overview: README.md
+  story_readme: story/README.md
   common: plan/common.md
   workflow: plan/workflow.md
   handoff: plan/handoff.md

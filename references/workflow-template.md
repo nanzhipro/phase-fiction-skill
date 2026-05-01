@@ -178,10 +178,11 @@ ruby scripts/planctl finalize
 
 首次成功执行时，`finalize` 会先写入最终 ledger，再输出仪表盘：
 
+- 生成或刷新 `story/README.md`，作为故事资料结构、层级职责、阅读顺序和维护原则的入口
 - 写入 `plan/state.yaml.finalized_at`
 - 刷新 `plan/handoff.md`
 - 执行最终 git 收尾：`git add -A` → `git commit -F -` → `git push`
-- 打印最终执行仪表盘，其中包括 repo policy、delivery gate、phase evidence 与 doctor 级问题
+- 打印最终执行仪表盘，其中包括 repo policy、delivery gate、story README、phase evidence 与 doctor 级问题
 
 AI 拿到 finalize 输出后，必须做一次深入审视，并把以下决策点交还人类：是否连载 / 投稿 / 对外发布，是否打手稿标签，是否归档 `plan/`，是否安排编辑、beta 读者、事实核查或敏感性审读。注意：全部 phase 完成只代表 workflow 结束；如果 delivery gate 仍未过线，例如字数或章节数明显低于目标，仍不能把当前产物当作目标层级的完成稿。
 

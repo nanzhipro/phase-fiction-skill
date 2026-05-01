@@ -124,13 +124,14 @@
 
 1. 必须立刻运行 `ruby scripts/planctl finalize`。
 2. `finalize` 在所有 phase 真正完成前会以 exit 2 拒绝执行。
-3. 首次成功的 `finalize` 必须先写入最终 ledger，再输出仪表盘：
+3. 首次成功的 `finalize` 必须先生成或刷新 `story/README.md`，再写入最终 ledger 并输出仪表盘：
+   - 生成或刷新 `story/README.md`，说明 `story/` 的目录层级、文件职责、推荐阅读顺序和维护原则
    - 写 `plan/state.yaml.finalized_at`
    - 刷新 `plan/handoff.md`
    - 运行 `git add -A` → `git commit -F -` → `git push`
 4. 一旦 `finalized_at` 已存在，重复 `finalize` 必须保持只读：不再重写 ledger、不再再次 commit、不再再次 push。
 5. 拿到 `finalize` 输出后，必须做一次深入审视，不得只复述结果。若仪表盘中的 delivery gate 未通过，必须明确指出“workflow 完成”不等于“目标交付层级已达标”。
-6. 最终执行仪表盘至少应覆盖：项目总览、Phase 台账、仓库状态、Delivery Gate、Health 检查、风险与遗留、推荐人类下一步。
+6. 最终执行仪表盘至少应覆盖：项目总览、Phase 台账、仓库状态、Delivery Gate、Story README、Health 检查、风险与遗留、推荐人类下一步。
 7. 在仪表盘最后必须明确把决策权交还人类，例如：
    - 是否连载 / 投稿 / 对外发布样章或全文
    - 是否打某个手稿版本标签

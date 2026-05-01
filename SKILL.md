@@ -1,6 +1,6 @@
 ---
 name: phase-fiction-skill
-description: "Set up a disk-backed Phase-Fiction workflow for long-form fiction projects. Use when the user wants to plan, continue, or revise a novel, novella, serial fiction project, multi-book arc, story bible, scene matrix, or full-manuscript rewrite across many sessions. Triggers: '写小说', '长篇小说规划', '续写长篇', '分阶段写小说', '故事 bible', '人物弧光规划', '章节矩阵', '修订轮次', 'serial fiction workflow', 'novel planning', 'story phase', 'scene matrix', 'revision pass', 'manuscript recovery', 'phase-fiction'. Scaffolds plan/manifest.yaml, plan/common.md, phase and execution contracts, a planctl scheduler script, plus synchronized agent instruction files so story state survives context compression across Copilot, Claude Code, and Codex."
+description: "Set up a disk-backed Phase-Fiction workflow for long-form fiction projects. Use when the user wants to plan, continue, or revise a novel, novella, serial fiction project, multi-book arc, story bible, scene matrix, or full-manuscript rewrite across many sessions. Triggers: '写小说', '长篇小说规划', '续写长篇', '分阶段写小说', '故事 bible', '人物弧光规划', '章节矩阵', '修订轮次', 'serial fiction workflow', 'novel planning', 'story phase', 'scene matrix', 'revision pass', 'manuscript recovery', 'phase-fiction'. Scaffolds plan/manifest.yaml, plan/common.md, phase and execution contracts, a planctl scheduler script, synchronized agent instruction files, and a final story/README.md index after creation completes."
 argument-hint: "(optional) target project path and one-line story premise"
 ---
 
@@ -55,6 +55,8 @@ argument-hint: "(optional) target project path and one-line story premise"
 │       └── phase-0-<name>.md    # 执行围栏：这轮允许改哪些文件
 ├── scripts/
 │   └── planctl                  # 调度脚本（Ruby，可直接执行）
+├── story/
+│   └── README.md                # finalization 时自动生成的故事资料结构说明
 ├── .github/
 │   └── copilot-instructions.md  # Copilot 强制层
 ├── CLAUDE.md                    # Claude Code 强制层
@@ -238,7 +240,7 @@ ruby scripts/planctl finalize
 ruby scripts/planctl finalize
 ```
 
-`finalize` 会写 `finalized_at`、刷新 `handoff.md`、执行最终 git 收尾，并输出最终执行仪表盘。此后 AI 必须把以下决策交还人类：
+`finalize` 会在首次成功执行时生成或刷新 `story/README.md`，再写 `finalized_at`、刷新 `handoff.md`、执行最终 git 收尾，并输出最终执行仪表盘。`story/README.md` 是给人类和后续 agent 的故事资料入口，会说明 `story/` 的目录层级、文件职责、推荐阅读顺序和维护原则。此后 AI 必须把以下决策交还人类：
 
 - 是否继续连载、投稿或公开发布
 - 是否打某个手稿版本标签
@@ -280,7 +282,7 @@ ruby scripts/planctl finalize
 - [ ] `.github/copilot-instructions.md`、`CLAUDE.md`、`AGENTS.md` 三份内容完全一致
 - [ ] `ruby scripts/planctl status`、`doctor`、`advance --strict` 能跑通
 - [ ] 当 current phase 仍是占位合同，`advance --strict` 会返回 `ACTION: promote_placeholder`
-- [ ] `finalize` 在 phase 未全部完成时拒绝运行；全部完成后能输出最终仪表盘
+- [ ] `finalize` 在 phase 未全部完成时拒绝运行；全部完成后能输出最终仪表盘并生成 `story/README.md`
 
 ## References
 

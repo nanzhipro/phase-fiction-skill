@@ -137,6 +137,61 @@ class PlanctlAutonomousTest < Minitest::Test
     refute_includes out, 'Committed finalization ledger'
   end
 
+  def test_finalize_generates_story_readme_as_final_artifact
+    create_story_package
+    complete_all_phases_with_skip_commit
+
+    out, err, status = run_planctl(
+      { 'PHASE_CONTRACT_SKIP_PUSH' => '1' },
+      'finalize'
+    )
+
+    assert status.success?, err
+    readme_path = File.join(@repo, 'story/README.md')
+    assert File.file?(readme_path), 'expected finalize to generate story/README.md'
+    readme = read_utf8(readme_path)
+    assert_includes readme, '# story 目录说明'
+    assert_includes readme, '## 文件树与职责'
+    assert_includes readme, 'premise.md'
+    assert_includes readme, 'canon/'
+    assert_includes readme, 'cast/'
+    assert_includes readme, 'outline/'
+    assert_includes readme, 'draft/'
+    assert_includes readme, 'revision/'
+    assert_includes readme, '## 推荐阅读顺序'
+    assert_includes readme, '## 维护原则'
+    assert_includes out, 'Story README: story/README.md'
+    assert_includes git_output('show', '--name-only', '--format=', 'HEAD'), 'story/README.md'
+  end
+
+  def test_finalize_reads_utf8_story_files_under_ascii_locale
+    create_story_package(draft_text: "## 第一章\n列车驶向草原。\n")
+    update_manifest do |manifest|
+      manifest['project_profile'] = {
+        'form' => 'longform-novel',
+        'delivery_tier' => 'full-draft',
+        'delivery_paths' => ['story/draft/**/*.md'],
+        'target_length_chars' => { 'min' => 5, 'max' => 10_000 },
+        'target_chapters' => { 'min' => 1, 'max' => 3 },
+        'target_chapter_pattern' => '^## '
+      }
+    end
+    complete_all_phases_with_skip_commit
+
+    out, err, status = run_planctl(
+      {
+        'PHASE_CONTRACT_SKIP_PUSH' => '1',
+        'LC_ALL' => 'C',
+        'LANG' => 'C'
+      },
+      'finalize'
+    )
+
+    assert status.success?, err
+    assert_includes out, 'Gate status: pass'
+    assert_includes out, 'Story README: story/README.md'
+  end
+
   def test_source_file_reports_rb_command_when_invoked_directly
     FileUtils.cp(SOURCE_PLANCTL, File.join(@repo, 'scripts', 'planctl.rb'))
 
@@ -483,6 +538,25 @@ class PlanctlAutonomousTest < Minitest::Test
       '--next-focus', 'Finalize execution.'
     )
     raise "phase-1 complete failed: #{err}\n#{out}" unless status.success?
+  end
+
+  def create_story_package(draft_text: "## One\nThe train leaves at night.\n")
+    FileUtils.mkdir_p(File.join(@repo, 'story/canon'))
+    FileUtils.mkdir_p(File.join(@repo, 'story/cast'))
+    FileUtils.mkdir_p(File.join(@repo, 'story/outline'))
+    FileUtils.mkdir_p(File.join(@repo, 'story/draft/part-1'))
+    FileUtils.mkdir_p(File.join(@repo, 'story/revision'))
+    File.write(File.join(@repo, 'story/premise.md'), "# Premise\nA contained railway mystery.\n")
+    File.write(File.join(@repo, 'story/canon/case-file.md'), "# Case File\n")
+    File.write(File.join(@repo, 'story/canon/timeline.md'), "# Timeline\n")
+    File.write(File.join(@repo, 'story/cast/protagonist.md'), "# Protagonist\n")
+    File.write(File.join(@repo, 'story/outline/arc-map.md'), "# Arc Map\n")
+    File.write(File.join(@repo, 'story/draft/part-1/chapters-01-02.md'), draft_text)
+    File.write(File.join(@repo, 'story/revision/structural-suspense-ledger.md'), "# Revision Ledger\n")
+  end
+
+  def read_utf8(path)
+    File.open(path, 'r:BOM|UTF-8') { |file| file.read }
   end
 
   def git_output(*args)
