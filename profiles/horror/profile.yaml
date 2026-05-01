@@ -1,0 +1,77 @@
+version: 1
+id: horror
+label: Horror
+family: horror
+engine: survival-pressure
+description: >-
+  面向恐惧、污染、追逐和生存代价的 horror profile，重点是威胁规则、
+  恐惧升级、角色脆弱点与余波，而不是单纯堆砌惊吓点。
+selection_hints:
+  suitable_for:
+    - 生存恐怖
+    - 心理恐怖
+    - 污染 / 侵入 / 围困式恐怖小说
+  avoid_when:
+    - 主要依靠爱情关系推进的作品
+    - 需要宏大政治系统与远程阵营博弈的史诗奇幻
+input_extensions:
+  required_questions:
+    - id: threat_nature
+      prompt: 威胁是实体、环境、心理、宗教/仪式，还是复合型？
+    - id: fear_contract
+      prompt: 这部作品主要要给读者什么恐惧：未知、失控、污染、肉体、伦理，还是别的？
+    - id: survival_floor
+      prompt: 角色最底线的求生代价是什么，哪些损伤是必须不可逆的？
+defaults:
+  story_artifacts:
+    required:
+      - path: story/canon/threat-rules.md
+        purpose: 锁定威胁来源、规则与失控条件
+      - path: story/cast/vulnerability-map.md
+        purpose: 记录角色脆弱点与恐惧触发器
+      - path: story/outline/dread-escalation.md
+        purpose: 规划恐惧升级的节奏与形态变化
+      - path: story/canon/survival-costs.md
+        purpose: 记录每次求生选择的代价与不可逆损伤
+    optional:
+      - path: story/canon/contamination-ledger.md
+        purpose: 当污染/感染/侵入是核心机制时显式记录
+  phase_catalog:
+    - id: phase-0-premise-promise
+      purpose: 锁定恐惧契约、威胁形式与失败后果
+      required: true
+    - id: phase-1-cast-engine
+      purpose: 建立角色脆弱点、互不信任与牺牲排序
+      required: true
+    - id: phase-2-threat-rules
+      purpose: 固定威胁规则、误判空间与失控条件
+      required: true
+    - id: phase-3-dread-escalation-design
+      purpose: 规划恐惧如何从不安升级为不可逆伤害
+      required: true
+    - id: phase-4-survival-wave-batches
+      purpose: 设计求生波次与阶段性崩坏节点
+      required: true
+    - id: phase-5-plus-draft-batches
+      purpose: 分批起稿并保持压力不塌陷
+      required: true
+revision_passes:
+  - id: dread-continuity-pass
+    focus: 检查威胁升级是否连续且不偷懒
+  - id: scare-placement-pass
+    focus: 检查惊吓点是否服务整体恐惧结构
+  - id: ending-aftershock-pass
+    focus: 检查结尾余波是否能反向增值前文恐惧
+quality_focus:
+  - threat consistency
+  - dread escalation
+  - vulnerability payoff
+  - ending aftershock
+common_md_must_cover:
+  - 威胁规则必须稳定，不能靠临时变形兜底
+  - 恐惧升级必须逼角色付出越来越重的代价
+  - 惊吓点要服务整体恐惧结构，不能只为瞬时刺激
+recommended_overlays:
+  - closed-circle
+  - countdown
+  - single-pov

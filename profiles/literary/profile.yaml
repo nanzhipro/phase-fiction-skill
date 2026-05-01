@@ -1,0 +1,77 @@
+version: 1
+id: literary
+label: Literary
+family: literary
+engine: character-study
+description: >-
+  面向人物内在张力、主题回响和语调控制的文学向长篇 profile，重点是人物选择、
+  意象重复和结构回声，而不是类型化快感的稳定高频供给。
+selection_hints:
+  suitable_for:
+    - 人物研究型小说
+    - 主题与语调驱动的文学向长篇
+    - 需要细密 motif 与结构回响的作品
+  avoid_when:
+    - 主要依赖高频动作/反转维持阅读的惊悚作品
+    - 设定系统比人物内在张力更重要的宏大奇幻
+input_extensions:
+  required_questions:
+    - id: thematic_pressure
+      prompt: 这部作品真正想逼问的主题问题是什么？
+    - id: voice_floor
+      prompt: 语言风格的底线是什么：克制、冷感、繁密、口语化，还是别的？
+    - id: image_system
+      prompt: 你希望哪些意象、物件或动作在全文里反复回响？
+defaults:
+  story_artifacts:
+    required:
+      - path: story/canon/theme-statement.md
+        purpose: 锁定主题问题、反命题与人物选择的关系
+      - path: story/canon/motif-ledger.md
+        purpose: 记录意象、动作和重复场景的回响链条
+      - path: story/cast/internal-contradictions.md
+        purpose: 记录核心人物的内在冲突与自我误解
+      - path: story/outline/pressure-map.md
+        purpose: 规划人物处境如何逐步逼出选择
+    optional:
+      - path: story/canon/voice-sample.md
+        purpose: 当语言风格风险较高时先锁一段样本
+  phase_catalog:
+    - id: phase-0-premise-promise
+      purpose: 锁定精神问题、人物处境与阅读承诺
+      required: true
+    - id: phase-1-cast-engine
+      purpose: 建立人物关系中的冲突镜像
+      required: true
+    - id: phase-2-inner-conflict-map
+      purpose: 把人物误信念、羞耻点和执念结构化
+      required: true
+    - id: phase-3-motif-structure
+      purpose: 安排意象、重复动作和场景回声
+      required: true
+    - id: phase-4-scene-pressure-design
+      purpose: 让每个关键场景都逼出人物选择
+      required: true
+    - id: phase-5-plus-draft-batches
+      purpose: 分批起稿并保持语调与主题连续性
+      required: true
+revision_passes:
+  - id: voice-coherence-pass
+    focus: 检查语言风格和叙述距离是否持续一致
+  - id: thematic-resonance-pass
+    focus: 检查主题是否通过选择显影而不是靠解释直说
+  - id: compression-and-silence-pass
+    focus: 删除说明性赘句，保留真正需要留白的地方
+quality_focus:
+  - voice coherence
+  - thematic resonance
+  - character contradiction depth
+  - motif payoff
+common_md_must_cover:
+  - 主题必须通过角色选择显影，不能靠作者解释顶替
+  - 留白是结构资源，不是信息缺失的借口
+  - 意象重复必须累积意义，而不是装饰性复现
+recommended_overlays:
+  - single-pov
+  - dual-pov
+  - nonlinear-timeline

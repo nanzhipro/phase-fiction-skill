@@ -4,6 +4,38 @@
 
 ### Added
 
+- Manifest-level `repo_policy` support in `planctl`. The default stance is now
+  `standalone`: the fiction project root should match the git top-level. If a
+  project is intentionally embedded inside a parent repository, it must opt in
+  via `repo_policy.mode: embedded-explicit`; on protected branches such as
+  `main` / `master`, `advance` / `complete` / `finalize` now refuse to run.
+- Manifest-level `project_profile` delivery gates. `doctor` and `finalize` can
+  now inspect target draft length, target chapter count, chapter-heading
+  pattern, and delivery globs so a workflow-complete project is no longer
+  automatically treated as a release-ready full draft.
+- Phase-level `artifact_checks` in manifest entries. `complete` now supports
+  machine-readable checks such as `file_exists`, `min_chars`, `max_chars`,
+  `regex_count`, and `no_placeholder_tokens`; failed checks abort before
+  `state.yaml` is written.
+- `completion_log[*].evidence` snapshots. When a phase with `artifact_checks`
+  completes, `planctl` now records the check results plus per-file SHA256 /
+  char / line snapshots, and `finalize` reports evidence drift when those files
+  changed after the phase was recorded.
+- Schema tightening for delivery-bearing phases. Under delivery tiers such as
+  `full-draft` and `serialized-arc`, any phase whose `allowed_paths` overlap
+  `project_profile.delivery_paths` must now declare `artifact_checks`; missing
+  gates are rejected by `complete` and surfaced by `doctor` / `finalize`.
+- `project_profile` structure tightening for strict delivery tiers. `doctor`
+  now requires explicit `target_chapter_pattern` plus complete positive-integer
+  `min` / `max` ranges for `target_length_chars` and `target_chapters` under
+  tiers such as `full-draft` and `serialized-arc`.
+- A new profile layer blueprint. The repo now includes `profiles/README.md`, a
+  starter `profiles/profile-template.yaml`, and sample `mystery-thriller` /
+  `romance` profiles to separate genre-specific defaults from the core workflow.
+- Added `profiles/overlays.yaml` as a shared overlay catalog and expanded the
+  starter profile set with `epic-fantasy`, `literary`, and `horror`, so
+  `workflow_profile` now has concrete data sources for deriving phase graphs.
+
 - `planctl advance [--format prompt|json] [--strict]` — autonomous
   continuation state machine. It emits `ACTION: implement`,
   `ACTION: promote_placeholder`, `ACTION: finalize`, or `ACTION: stop` so
@@ -119,6 +151,11 @@
 - `references/templates.md` documents the new optional
   `phases[].allowed_paths:` manifest field and the top-level
   `execution_rule.enforce_allowed_paths:` strict-mode switch.
+- `SKILL.md`, `README.md`, `README.zh-CN.md`, `references/templates.md`,
+  `references/phase-templates.md`, and `references/workflow-template.md` now
+  document `repo_policy`, `project_profile`, and `artifact_checks` so new
+  fiction projects inherit repository isolation, delivery gates, and evidence
+  snapshots by default instead of relying on prompt memory.
 - `references/workflow-template.md` now includes a "如何回退一个 Phase"
   section covering `--mode revert` vs `--mode reset` and the expected
   follow-up `planctl advance --strict`.

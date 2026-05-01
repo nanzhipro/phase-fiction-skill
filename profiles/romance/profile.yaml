@@ -1,0 +1,72 @@
+version: 1
+id: romance
+label: Romance
+family: romance
+engine: relationship-driven
+description: >-
+  面向爱情主轴小说的基础 profile，重点是情感阻力、关系推进、误解成本、
+  亲密度节奏和关系兑现，而不是线索揭示。
+selection_hints:
+  suitable_for:
+    - 单线或双线爱情长篇
+    - 慢热关系推进
+    - 以情感成长为主要阅读快感的故事
+  avoid_when:
+    - 谜题与线索回收才是主推进力的悬疑小说
+    - 世界规则展示重于关系推进的高设定作品
+input_extensions:
+  required_questions:
+    - id: relationship_end_state
+      prompt: 两位核心关系人物最终是 HE、BE、开放式结局，还是阶段性达成？
+    - id: emotional_wound_map
+      prompt: 双方各自最深的情感伤口、误信念和亲密恐惧是什么？
+    - id: intimacy_boundary
+      prompt: 你希望情感与亲密描写的尺度、节奏和明确边界是什么？
+defaults:
+  story_artifacts:
+    required:
+      - path: story/canon/relationship-arc.md
+        purpose: 记录关系起点、关键台阶与终局兑现
+      - path: story/cast/emotional-wounds.md
+        purpose: 记录双方的伤口、误信念与需求
+      - path: story/outline/intimacy-beats.md
+        purpose: 控制吸引、抗拒、误解和和解节奏
+    optional:
+      - path: story/canon/secondary-couple-map.md
+        purpose: 当副 CP 会影响主线推进时显式记录
+  phase_catalog:
+    - id: phase-0-premise-promise
+      purpose: 定义关系承诺、情感快感与失败代价
+      required: true
+    - id: phase-1-cast-engine
+      purpose: 建立核心 CP 与关键配角的情感驱动力
+      required: true
+    - id: phase-2-relationship-arc
+      purpose: 锁定吸引、抗拒、误解、和解的推进曲线
+      required: true
+    - id: phase-3-scene-beat-design
+      purpose: 规划关系场景矩阵与亲密度节奏
+      required: true
+    - id: phase-4-plus-draft-batches
+      purpose: 分批起稿并保持情感递进不塌陷
+      required: true
+revision_passes:
+  - id: emotional-continuity-pass
+    focus: 检查人物情感转变是否连贯且代价成立
+  - id: chemistry-and-tension-pass
+    focus: 检查吸引、抗拒和拉扯是否持续供给
+  - id: ending-payoff-pass
+    focus: 检查关系终局是否兑现前文承诺
+quality_focus:
+  - emotional progression
+  - chemistry consistency
+  - conflict legitimacy
+  - ending payoff
+common_md_must_cover:
+  - 情感推进必须建立在角色选择与代价上，而不是单靠误会拖延
+  - 亲密描写尺度与边界必须在项目开始时定清楚
+  - 关系终局必须与前文承诺匹配，不能靠临时转向收尾
+recommended_overlays:
+  - dual-pov
+  - slow-burn
+  - serial-release

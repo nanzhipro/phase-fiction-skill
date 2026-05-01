@@ -1,0 +1,38 @@
+version: 1
+id: <profile-id>
+label: <human-readable label>
+family: <mystery-thriller|romance|epic-fantasy|literary|horror|custom>
+engine: <clue-driven|relationship-driven|quest-driven|world-revelation|character-study|survival-pressure>
+description: >-
+  <一句话说明这个 profile 默认服务什么类型的长篇小说。>
+selection_hints:
+  suitable_for:
+    - <适用场景 1>
+    - <适用场景 2>
+  avoid_when:
+    - <不适用场景 1>
+input_extensions:
+  required_questions:
+    - id: <question-id>
+      prompt: <相对于通用输入还要额外问用户什么>
+defaults:
+  story_artifacts:
+    required:
+      - path: <story/...>
+        purpose: <这个制品解决什么问题>
+    optional:
+      - path: <story/...>
+        purpose: <这个制品在什么情况下需要>
+  phase_catalog:
+    - id: <phase-id>
+      purpose: <该 phase 在此 profile 里的作用>
+      required: true
+revision_passes:
+  - id: <revision-pass-id>
+    focus: <这一轮修订要解决什么>
+quality_focus:
+  - <finalize/review 时要重点检查什么>
+common_md_must_cover:
+  - <必须进入 plan/common.md 的长期约束主题>
+recommended_overlays:
+  - <overlay-id，必须来自 profiles/overlays.yaml>

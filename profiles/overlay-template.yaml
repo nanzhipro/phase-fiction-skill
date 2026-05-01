@@ -1,0 +1,25 @@
+version: 1
+id: <overlay-id>
+label: <human-readable label>
+purpose: >-
+  <一句话说明这个 overlay 解决什么次级结构压力。>
+compatible_profiles:
+  - <mystery-thriller|romance|epic-fantasy|literary|horror|custom>
+phase_merge:
+  operations:
+    - op: require_phase
+      targets:
+        <profile-id>: <existing-phase-id>
+        <custom>: <existing-phase-id>
+    - op: ensure_phase_after
+      anchor_targets:
+        <profile-id>: <existing-anchor-phase-id>
+      phase:
+        id: <new-phase-id>
+        purpose: <要插入或提升成显式 phase 的结构要求>
+        required: true
+artifact_additions:
+  - path: <story/...>
+    purpose: <这个 overlay 额外要求哪些制品>
+common_md_must_cover:
+  - <必须注入 plan/common.md 的长期纪律>

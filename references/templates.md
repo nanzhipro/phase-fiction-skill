@@ -15,6 +15,32 @@ entrypoints:
   common: plan/common.md
   workflow: plan/workflow.md
   handoff: plan/handoff.md
+workflow_profile:
+  profile: <mystery-thriller|romance|epic-fantasy|literary|horror|custom>
+  engine: <clue-driven|relationship-driven|quest-driven|world-revelation|character-study|survival-pressure>
+  overlays:
+    - <例如 closed-circle>
+    - <例如 dual-pov>
+project_profile:
+  form: <longform-novel|novella|serial-fiction>
+  delivery_tier: <full-draft|serialized-arc|revision-pass>
+  target_length_chars:
+    min: <例如 80000，必须为正整数>
+    max: <例如 120000，必须为正整数>
+  target_chapters:
+    min: <例如 12，必须为正整数>
+    max: <例如 20，必须为正整数>
+  target_chapter_pattern: '^## '
+  delivery_paths:
+    - story/draft/**/*.md
+repo_policy:
+  mode: standalone
+  protected_branches:
+    - main
+    - master
+
+`full-draft` / `serialized-arc` 项目默认按严格交付层处理：上面的 `target_length_chars`、`target_chapters` 都应提供完整的 `min` 和 `max`，且两者必须是正整数并满足 `min <= max`；`target_chapter_pattern` 也应显式保留，不要删掉后依赖默认值。
+
 execution_rule:
   description: >-
     执行任一创作阶段时，必须同时携带完整通用上下文、当前阶段定位合同与当前执行合同。
@@ -77,6 +103,14 @@ phases:
       - plan/phases/phase-0-premise-promise.md
       - plan/execution/phase-0-premise-promise.md
     depends_on: []
+    artifact_checks:
+      - type: file_exists
+        path: story/premise.md
+      - type: min_chars
+        path: story/premise.md
+        min: 600
+      - type: no_placeholder_tokens
+        path: story/premise.md
     allowed_paths:
       - story/premise.md
       - story/canon/**
@@ -105,9 +139,96 @@ phases:
 **检查点**：
 
 - `required_context` 恰好三项（common + plan + execution），不要多也不要少。
+- `workflow_profile` 用于表达题材 / 叙事引擎默认值，供 Skill 选择 profile；它不应该替代项目自己的 premise、人物或正文结构。
+- `phases` 应先基于 `workflow_profile.profile` 对应的 `profiles/*/profile.yaml` 派生，再按 `workflow_profile.overlays` 应用 [profiles/overlays.yaml](../profiles/overlays.yaml) 里的 `phase_merge.operations`，最后才处理用户覆写。
+- overlay 里的 phase merge 必须通过 `targets` / `anchor_targets` 显式解析当前 profile 的 phase id；不要按 phase 名称相似度猜测“等价 phase”。
+- `repo_policy.mode` 默认应为 `standalone`。只有明确接受嵌入宿主仓库时，才改成 `embedded-explicit`，且不要直接落在 `main` / `master`。
+- `project_profile` 里的目标长度、章节数和 delivery paths 不是说明文字，而是 `doctor` / `finalize` 会消费的项目级门禁。
 - `depends_on` 只写真依赖，禁止循环。
+- 当 `project_profile.delivery_tier` 是 `full-draft` 或 `serialized-arc` 时，任何会写入 `delivery_paths` 的 phase 默认都必须声明 `artifact_checks`；否则 `complete` 会拒绝写回，`doctor` / `finalize` 也会报问题。
+- 需要机器可验证的 phase，请在 manifest phase 条目里补 `artifact_checks`；`complete` 会在写回 state 前强制执行。
 - `compression_control.rules` 三条硬规则保持不变。
 - 未来阶段若暂不正式规划，必须使用带 `PHASE_CONTRACT_PLACEHOLDER` 的成对占位文件，而不是空文件。
+
+### 1.1 完整示例：full-draft 长篇项目 manifest 片段
+
+下面是一份更接近真实项目的最小示例，重点展示 `project_profile`、`repo_policy` 和 delivery-bearing phase 的 `artifact_checks`：
+
+```yaml
+version: 1
+kind: steppe-train-fiction-plan-manifest
+project: grassland-train-mystery
+entrypoints:
+  overview: README.md
+  common: plan/common.md
+  workflow: plan/workflow.md
+  handoff: plan/handoff.md
+workflow_profile:
+  profile: mystery-thriller
+  engine: clue-driven
+  overlays:
+    - closed-circle
+    - countdown
+project_profile:
+  form: longform-novel
+  delivery_tier: full-draft
+  target_length_chars:
+    min: 80000
+    max: 120000
+  target_chapters:
+    min: 12
+    max: 20
+  target_chapter_pattern: '^## '
+  delivery_paths:
+    - story/draft/**/*.md
+repo_policy:
+  mode: standalone
+  protected_branches:
+    - main
+    - master
+execution_rule:
+  resolver: scripts/planctl
+  state_file: plan/state.yaml
+  handoff_file: plan/handoff.md
+  required_context:
+    - plan/common.md
+  continuation:
+    mode: autonomous
+  compression_control:
+    max_completion_history: 3
+    resume_read_order:
+      - plan/manifest.yaml
+      - plan/handoff.md
+      - next.phase.required_context
+  continuous_execution:
+    next_command: ruby scripts/planctl advance --strict
+    completion_command: ruby scripts/planctl complete <phase-id> --summary "<summary>" --next-focus "<next-focus>" --continue
+phases:
+  - id: phase-8-opening-draft-batch
+    title: Draft the opening movement
+    plan_file: plan/phases/phase-8-opening-draft-batch.md
+    execution_file: plan/execution/phase-8-opening-draft-batch.md
+    depends_on:
+      - phase-7-endgame-matrix
+    required_context:
+      - plan/common.md
+      - plan/phases/phase-8-opening-draft-batch.md
+      - plan/execution/phase-8-opening-draft-batch.md
+    artifact_checks:
+      - type: min_chars
+        path: story/draft/part-1/chapters-01-04.md
+        min: 18000
+      - type: regex_count
+        path: story/draft/part-1/chapters-01-04.md
+        pattern: '^## '
+        min: 4
+      - type: no_placeholder_tokens
+        path: story/draft/part-1/chapters-01-04.md
+    allowed_paths:
+      - story/draft/part-1/**
+```
+
+这个例子表达的是：当前项目目标是“长篇完整初稿”，所以 draft phase 不是“写出文件就算完成”，而是必须带着最基本的字数、章节数和占位清理门禁通过 `complete`。
 
 ---
 
@@ -179,7 +300,7 @@ updated_at: null
 finalized_at: null
 ```
 
-**注意**：此文件由 `planctl complete` 与首次成功的 `planctl finalize` 写入，人类禁止手改。
+**注意**：此文件由 `planctl complete` 与首次成功的 `planctl finalize` 写入，人类禁止手改。启用 `artifact_checks` 后，`completion_log[*].evidence` 会自动写入每轮交付的检查结果与文件快照。
 
 ---
 

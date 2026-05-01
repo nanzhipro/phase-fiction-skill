@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+require 'digest'
 require 'json'
 require 'optparse'
 require 'pathname'
@@ -15,6 +16,15 @@ class PlanCtl
   GIT_GUARD_EXIT_CODE = 3
   ALWAYS_ALLOWED_PATHS = %w[plan/state.yaml plan/handoff.md .gitignore].freeze
   STATE_SCHEMA_VERSION = 1
+  DEFAULT_PROTECTED_BRANCHES = %w[main master].freeze
+  DEFAULT_PLACEHOLDER_ARTIFACT_TOKENS = %w[PHASE_CONTRACT_PLACEHOLDER TODO FIXME 待补 占位].freeze
+  DEFAULT_REQUIRED_ARTIFACT_CHECK_TIERS = %w[full-draft serialized-arc].freeze
+  DEFAULT_REQUIRED_PROJECT_PROFILE_FIELDS = {
+    'full-draft' => %w[form delivery_tier delivery_paths target_length_chars target_chapters target_chapter_pattern],
+    'serialized-arc' => %w[form delivery_tier delivery_paths target_length_chars target_chapters target_chapter_pattern]
+  }.freeze
+  DEFAULT_STORY_PATH_HINTS = %w[story/**].freeze
+  DEFAULT_DRAFT_PATH_HINTS = %w[story/draft/**].freeze
   PLACEHOLDER_SENTINELS = %w[PHASE_CONTRACT_PLACEHOLDER PHASE-CONTRACT-PLACEHOLDER].freeze
   PLACEHOLDER_HEADER_LINE_LIMIT = 40
   PLACEHOLDER_HINT_PATTERNS = [
@@ -27,10 +37,23 @@ class PlanCtl
     /upgrade .* formal contract/i
   ].freeze
 
-  def initialize(repo_root)
+  def initialize(repo_root, program_path: $PROGRAM_NAME)
     @repo_root = Pathname.new(repo_root)
+    @program_path = normalize_program_path(program_path)
     @manifest_path = @repo_root.join('plan', 'manifest.yaml')
     @manifest = load_yaml(@manifest_path)
+  end
+
+  def cli_script_path
+    @program_path
+  end
+
+  def cli_command(*parts)
+    (['ruby', cli_script_path] + parts).join(' ')
+  end
+
+  def automation_identity(*parts)
+    ([cli_script_path] + parts).join(' ')
   end
 
   def resolve(phase_id, format:, strict:)
@@ -157,6 +180,9 @@ class PlanCtl
       exit 2
     end
 
+    artifact_validation = validate_phase_artifacts!(phase)
+    exit 2 unless artifact_validation['ready']
+
     completed << phase_id
     ordered = manifest_phases.map { |entry| entry['id'] }.select { |id| completed.include?(id) }
     completion_log = Array(state['completion_log'])
@@ -167,6 +193,7 @@ class PlanCtl
     }
     completion_entry['summary'] = summary unless blank?(summary)
     completion_entry['next_focus'] = next_focus unless blank?(next_focus)
+    completion_entry['evidence'] = artifact_validation['evidence'] unless artifact_validation['evidence'].empty?
     completion_log << completion_entry
 
     new_state = state.merge(
@@ -188,10 +215,10 @@ class PlanCtl
     # does not have to re-derive it from the manifest.
     next_phase = first_remaining_phase(ordered)
     if next_phase
-      puts "Next phase: #{next_phase['id']} (#{next_phase['title']}). Run: ruby scripts/planctl advance --strict"
+      puts "Next phase: #{next_phase['id']} (#{next_phase['title']}). Run: #{cli_command('advance', '--strict')}"
     else
       puts 'All phases are completed. No remaining work.'
-      puts 'Final step: run `ruby scripts/planctl finalize` to print the final execution dashboard and recommended human next steps.'
+      puts "Final step: run `#{cli_command('finalize')}` to print the final execution dashboard and recommended human next steps."
     end
 
     if continue_run || autonomous_continuation?
@@ -307,7 +334,7 @@ class PlanCtl
       body = summary && !summary.strip.empty? ? summary.strip : 'Phase rolled back via planctl revert.'
       lines = [subject, '', body, '', "Phase-Id: #{phase_id}", "Revert-Mode: #{mode}"]
       lines << "Reverted-Commit: #{commit_sha}" if commit_sha && !commit_sha.empty?
-      lines << 'Automated-By: scripts/planctl revert'
+      lines << "Automated-By: #{automation_identity('revert')}"
       message = lines.join("\n") + "\n"
       unless run_git_with_stdin(message, 'commit', '-F', '-')
         warn "[planctl] git commit failed after revert of #{phase_id}; state is rolled back but no ledger commit was recorded."
@@ -400,14 +427,23 @@ class PlanCtl
 
     if git_work_tree?
       puts 'Git work tree: ok'
+      policy_issues = repo_policy_issues
+      problems.concat(policy_issues)
       remotes = capture_git('remote').split("\n").reject(&:empty?)
       if remotes.empty?
         warnings << 'No git remote configured; `complete` will commit locally, skip push, and continue.'
       else
         puts "Git remotes: #{remotes.join(', ')}"
       end
+      repo_policy_notes.each { |note| warnings << note }
     else
       problems << "#{@repo_root} is not a git work tree."
+    end
+
+    delivery_gate = build_delivery_gate_state
+    if delivery_gate['enabled']
+      problems.concat(Array(delivery_gate['issues']))
+      warnings.concat(Array(delivery_gate['notes']))
     end
 
     manifest_phases.each do |phase|
@@ -491,7 +527,7 @@ class PlanCtl
 
     unless remaining.empty?
       warn "Cannot finalize: #{remaining.length} phase(s) still pending — #{remaining.map { |p| p['id'] }.join(', ')}."
-      warn '[planctl] finalize only runs after every manifest phase is in state.yaml. Run `ruby scripts/planctl advance --strict` to resume.'
+      warn "[planctl] finalize only runs after every manifest phase is in state.yaml. Run `#{cli_command('advance', '--strict')}` to resume."
       exit 2
     end
 
@@ -515,19 +551,30 @@ class PlanCtl
 
   def ensure_git_repo!
     return if git_opt_out?
-    return if git_work_tree?
 
-    warn git_guard_message
+    unless git_work_tree?
+      warn git_guard_message
+      exit GIT_GUARD_EXIT_CODE
+    end
+
+    issues = repo_policy_issues
+    return if issues.empty?
+
+    issues.each { |issue| warn issue }
     exit GIT_GUARD_EXIT_CODE
   end
 
   def warn_if_not_git_repo
     return if git_opt_out?
-    return if git_work_tree?
 
-    warn '[planctl] warning: current directory is not a git work tree.'
-    warn "[planctl] warning: `advance` / `next` / `resolve` / `complete` / `handoff` will refuse to run (exit #{GIT_GUARD_EXIT_CODE}) until a git baseline exists."
-    warn "[planctl] warning: see `plan/workflow.md` for the `git init` instructions or set #{GIT_OPT_OUT_ENV}=1 to opt out explicitly."
+    unless git_work_tree?
+      warn '[planctl] warning: current directory is not a git work tree.'
+      warn "[planctl] warning: `advance` / `next` / `resolve` / `complete` / `handoff` will refuse to run (exit #{GIT_GUARD_EXIT_CODE}) until a git baseline exists."
+      warn "[planctl] warning: see `plan/workflow.md` for the `git init` instructions or set #{GIT_OPT_OUT_ENV}=1 to opt out explicitly."
+      return
+    end
+
+    repo_policy_issues.each { |issue| warn "[planctl] warning: #{issue}" }
   end
 
   def git_opt_out?
@@ -561,6 +608,238 @@ class PlanCtl
     lines << ''
     lines << "If this project intentionally does not use git, set #{GIT_OPT_OUT_ENV}=1 and record the deviation (with a rollback/audit plan) in plan/common.md."
     lines.join("\n")
+  end
+
+  def repo_policy
+    policy = @manifest['repo_policy']
+    policy.is_a?(Hash) ? policy : {}
+  end
+
+  def repo_policy_mode
+    mode = repo_policy['mode'].to_s.strip
+    mode.empty? ? 'standalone' : mode
+  end
+
+  def protected_branches
+    branches = Array(repo_policy['protected_branches']).map(&:to_s).reject(&:empty?)
+    branches.empty? ? DEFAULT_PROTECTED_BRANCHES : branches
+  end
+
+  def git_toplevel_path
+    return nil unless git_work_tree?
+
+    raw = capture_git_silent('rev-parse', '--show-toplevel').strip
+    return nil if raw.empty?
+
+    Pathname.new(raw).expand_path
+  end
+
+  def repo_root_path
+    @repo_root.expand_path
+  end
+
+  def repo_root_matches_git_toplevel?
+    top = git_toplevel_path
+    !top.nil? && top == repo_root_path
+  end
+
+  def repo_policy_issues
+    return [] if git_opt_out?
+    return [] unless git_work_tree?
+
+    issues = []
+    if repo_policy_mode == 'standalone' && !repo_root_matches_git_toplevel?
+      issues << "[planctl] error: repo_policy.mode=standalone requires the project root to be the git top-level, but git top-level is #{git_toplevel_path} while project root is #{repo_root_path}."
+      issues << '[planctl] error: initialize a dedicated repository/worktree at the project root, or set repo_policy.mode=embedded-explicit if you intentionally want an embedded project.'
+    end
+
+    if repo_policy_mode == 'embedded-explicit' && protected_branches.include?(current_git_branch)
+      issues << "[planctl] error: embedded-explicit projects must not run on protected branch #{current_git_branch.inspect}; switch to a dedicated branch or worktree first."
+    end
+
+    issues
+  end
+
+  def repo_policy_notes
+    notes = []
+    if git_opt_out?
+      # no-op
+    elsif git_work_tree? && repo_policy_mode == 'embedded-explicit'
+      notes << "repo policy: embedded-explicit (git top-level: #{git_toplevel_path})"
+    elsif git_work_tree? && repo_policy_mode == 'standalone' && repo_policy_explicitly_configured?
+      notes << 'repo policy: standalone git root enforced'
+    end
+    notes.concat(legacy_manifest_migration_notes)
+    notes
+  end
+
+  def current_git_branch
+    branch = capture_git_silent('rev-parse', '--abbrev-ref', 'HEAD').strip
+    return nil if branch.empty? || branch == 'HEAD'
+
+    branch
+  end
+
+  def artifact_checks_for(phase)
+    Array(phase['artifact_checks']).select { |entry| entry.is_a?(Hash) }
+  end
+
+  def validate_phase_artifacts!(phase)
+    checks = artifact_checks_for(phase)
+    if checks.empty?
+      if phase_requires_artifact_checks?(phase)
+        warn "[planctl] phase #{phase['id']} requires artifact_checks because project_profile.delivery_tier=#{project_profile['delivery_tier'].inspect} and its allowed_paths overlap delivery_paths."
+        warn '[planctl] aborting before state write. Add manifest phase artifact_checks so this delivery-bearing phase leaves machine-checkable evidence.'
+        return {
+          'ready' => false,
+          'evidence' => {
+            'artifact_checks' => [],
+            'file_snapshots' => [],
+            'required_artifact_gate_missing' => true
+          }
+        }
+      end
+
+      return { 'ready' => true, 'evidence' => {} }
+    end
+
+    results = checks.map { |check| evaluate_artifact_check(check) }
+    failures = results.reject { |result| result['passed'] }
+    snapshots = build_file_snapshots(results)
+    evidence = {
+      'artifact_checks' => results,
+      'file_snapshots' => snapshots
+    }
+
+    return { 'ready' => true, 'evidence' => evidence } if failures.empty?
+
+    warn "[planctl] artifact checks failed for #{phase['id']}:"
+    failures.each do |failure|
+      warn "  - #{failure['label'] || failure['type']}: #{failure['message']}"
+    end
+    warn '[planctl] aborting before state write. Fix the artifact gate(s) or relax the phase contract, then rerun complete.'
+    { 'ready' => false, 'evidence' => evidence }
+  end
+
+  def evaluate_artifact_check(check)
+    type = check['type'].to_s.strip
+    path = check['path'].to_s.strip
+    label = check['label'] || [type, path].reject(&:empty?).join(': ')
+    result = {
+      'type' => type,
+      'path' => path,
+      'label' => label,
+      'passed' => false
+    }
+
+    if type.empty?
+      result['message'] = 'missing check type'
+      return result
+    end
+    if path.empty?
+      result['message'] = 'missing path'
+      return result
+    end
+
+    file_path = @repo_root.join(path)
+    unless file_path.file?
+      result['message'] = 'file missing'
+      return result
+    end
+
+    content = file_path.read
+
+    case type
+    when 'file_exists'
+      result['expected'] = 'file exists'
+      result['actual'] = 'file exists'
+      result['message'] = 'file exists'
+      result['passed'] = true
+    when 'min_chars'
+      min = integer_or_nil(check['min'])
+      return invalid_check_result(result, 'min_chars requires integer min') if min.nil?
+
+      actual = content.length
+      result['expected'] = { 'min' => min }
+      result['actual'] = actual
+      result['passed'] = actual >= min
+      result['message'] = result['passed'] ? "#{actual} chars >= #{min}" : "#{actual} chars < #{min}"
+    when 'max_chars'
+      max = integer_or_nil(check['max'])
+      return invalid_check_result(result, 'max_chars requires integer max') if max.nil?
+
+      actual = content.length
+      result['expected'] = { 'max' => max }
+      result['actual'] = actual
+      result['passed'] = actual <= max
+      result['message'] = result['passed'] ? "#{actual} chars <= #{max}" : "#{actual} chars > #{max}"
+    when 'regex_count'
+      pattern = check['pattern'].to_s
+      return invalid_check_result(result, 'regex_count requires pattern') if pattern.empty?
+
+      regex = Regexp.new(pattern)
+      actual = content.scan(regex).length
+      min = integer_or_nil(check['min'])
+      max = integer_or_nil(check['max'])
+      passed = true
+      passed &&= actual >= min if min
+      passed &&= actual <= max if max
+      expected = { 'pattern' => pattern }
+      expected['min'] = min if min
+      expected['max'] = max if max
+      result['expected'] = expected
+      result['actual'] = actual
+      result['passed'] = passed
+      result['message'] = passed ? "regex count=#{actual}" : "regex count=#{actual}, expected #{expected.inspect}"
+    when 'no_placeholder_tokens'
+      tokens = Array(check['tokens']).map(&:to_s).reject(&:empty?)
+      tokens = DEFAULT_PLACEHOLDER_ARTIFACT_TOKENS if tokens.empty?
+      found = tokens.select { |token| content.include?(token) }
+      result['expected'] = { 'tokens_absent' => tokens }
+      result['actual'] = { 'found' => found }
+      result['passed'] = found.empty?
+      result['message'] = found.empty? ? 'no placeholder tokens found' : "found placeholder tokens: #{found.join(', ')}"
+    else
+      return invalid_check_result(result, "unknown artifact check type #{type.inspect}")
+    end
+
+    result
+  rescue RegexpError => error
+    invalid_check_result(result, "invalid regex: #{error.message}")
+  end
+
+  def invalid_check_result(result, message)
+    result['message'] = message
+    result['passed'] = false
+    result
+  end
+
+  def build_file_snapshots(results)
+    results.map { |result| result['path'] }.compact.uniq.each_with_object([]) do |path, snapshots|
+      snapshot = file_snapshot(path)
+      snapshots << snapshot if snapshot
+    end
+  end
+
+  def file_snapshot(path)
+    full_path = @repo_root.join(path)
+    return nil unless full_path.file?
+
+    content = full_path.read
+    {
+      'path' => path,
+      'sha256' => Digest::SHA256.hexdigest(content),
+      'chars' => content.length,
+      'lines' => content.lines.length
+    }
+  end
+
+  def integer_or_nil(value)
+    return nil if value.nil? || value.to_s.strip.empty?
+
+    Integer(value)
+  rescue ArgumentError, TypeError
+    nil
   end
 
   # Automatically commit + push the current phase's work as a milestone.
@@ -653,7 +932,7 @@ class PlanCtl
     lines << ''
     lines << "Phase-Id: #{phase_id}"
     lines << "Next-Focus: #{next_focus.strip}" if next_focus && !next_focus.strip.empty?
-    lines << 'Automated-By: scripts/planctl complete'
+    lines << "Automated-By: #{automation_identity('complete')}"
     lines.join("\n") + "\n"
   end
 
@@ -717,7 +996,7 @@ class PlanCtl
     lines << 'Record the finalization ledger after all manifest phases completed.'
     lines << ''
     lines << "Finalized-At: #{finalized_at}"
-    lines << 'Automated-By: scripts/planctl finalize'
+    lines << "Automated-By: #{automation_identity('finalize')}"
     lines.join("\n") + "\n"
   end
 
@@ -859,7 +1138,7 @@ class PlanCtl
         'phase' => nil,
         'required_context' => [],
         'continuation' => continuation,
-        'finalize_command' => 'ruby scripts/planctl finalize',
+        'finalize_command' => cli_command('finalize'),
         'message' => 'All phases are completed. Run finalize, then stop for human publish/archive decisions.'
       }
     end
@@ -893,7 +1172,7 @@ class PlanCtl
       'missing_context_files' => resolve['missing_context_files'],
       'placeholder_contract_files' => resolve['placeholder_contract_files'],
       'continuation' => continuation,
-      'next_command' => 'ruby scripts/planctl advance --strict'
+      'next_command' => cli_command('advance', '--strict')
     }
   end
 
@@ -1032,7 +1311,7 @@ class PlanCtl
       'message' => 'All phases are completed.',
       'state_file' => state_file_relative,
       'handoff_file' => handoff_file_relative,
-      'finalize_command' => 'ruby scripts/planctl finalize'
+      'finalize_command' => cli_command('finalize')
     }
 
     case format
@@ -1042,7 +1321,7 @@ class PlanCtl
       puts 'All phases are completed.'
       puts "State file: #{result['state_file']}"
       puts "Handoff file: #{result['handoff_file']}"
-      puts 'Final step: run `ruby scripts/planctl finalize` to print the final execution dashboard and recommended human next steps.'
+      puts "Final step: run `#{cli_command('finalize')}` to print the final execution dashboard and recommended human next steps."
     end
   end
 
@@ -1078,7 +1357,7 @@ class PlanCtl
         puts
         puts 'Next internal actions:'
         puts '1. Upgrade both phase and execution contracts to formal, objective contracts.'
-        puts '2. Rerun `ruby scripts/planctl advance --strict`.'
+        puts "2. Rerun `#{cli_command('advance', '--strict')}`."
         puts '3. Start implementation only when ACTION becomes implement.'
         puts
         puts 'This is a Golden-Loop internal action, not a user confirmation point.'
@@ -1153,7 +1432,8 @@ class PlanCtl
       'title' => phase['title'],
       'completed_at' => entry['completed_at'],
       'summary' => entry['summary'],
-      'next_focus' => entry['next_focus']
+      'next_focus' => entry['next_focus'],
+      'evidence' => entry['evidence']
     }
   end
 
@@ -1224,7 +1504,7 @@ class PlanCtl
     continuous_execution = snapshot['continuous_execution']
     lines << "- next: `#{continuous_execution['next_command']}`" if continuous_execution['next_command']
     lines << "- complete: `#{continuous_execution['completion_command']}`" if continuous_execution['completion_command']
-    lines << "- handoff-repair (manual recovery only): `ruby scripts/planctl handoff --write`"
+    lines << "- handoff-repair (manual recovery only): `#{cli_command('handoff', '--write')}`"
     lines << ''
 
     lines.join("\n")
@@ -1309,8 +1589,22 @@ class PlanCtl
     return if version.is_a?(Integer) && version <= STATE_SCHEMA_VERSION
 
     warn "[planctl] error: #{path} declares schema version #{version.inspect}, but this planctl only understands <= #{STATE_SCHEMA_VERSION}."
-    warn '[planctl] Upgrade scripts/planctl before continuing, or restore the previous state.yaml.'
+    warn "[planctl] Upgrade #{cli_script_path} before continuing, or restore the previous state.yaml."
     exit 2
+  end
+
+  def normalize_program_path(program_path)
+    raw_path = program_path.to_s
+    return 'scripts/planctl' if raw_path.empty?
+
+    candidate = Pathname.new(raw_path)
+    expanded = candidate.absolute? ? candidate.cleanpath : @repo_root.join(candidate).cleanpath
+    repo_root = @repo_root.expand_path
+    repo_prefix = "#{repo_root}/"
+
+    return expanded.relative_path_from(repo_root).to_s if expanded == repo_root || expanded.to_s.start_with?(repo_prefix)
+
+    raw_path
   end
 
   def write_state(state)
@@ -1396,13 +1690,16 @@ class PlanCtl
     phase_rows = manifest_phases.map do |phase|
       entry = log_by_id[phase['id']] || {}
       sha = capture_git('log', '--grep', "^Phase-Id: #{phase['id']}$", '-n', '1', '--format=%H').strip
+      evidence_drift = evidence_drift_for(entry)
       {
         'phase_id' => phase['id'],
         'title' => phase['title'],
         'completed_at' => entry['completed_at'],
         'summary' => entry['summary'],
         'next_focus' => entry['next_focus'],
-        'milestone_commit' => sha.empty? ? nil : sha
+        'milestone_commit' => sha.empty? ? nil : sha,
+        'evidence_summary' => evidence_summary_for(entry),
+        'evidence_drift' => evidence_drift
       }
     end
 
@@ -1410,6 +1707,7 @@ class PlanCtl
     elapsed_seconds = timestamps.length >= 2 ? (timestamps.last - timestamps.first).to_i : nil
 
     git_state = build_git_finalize_state
+    delivery_gate = build_delivery_gate_state
     health = build_finalize_health(state)
 
     {
@@ -1427,8 +1725,9 @@ class PlanCtl
       'elapsed_human' => elapsed_seconds && format_elapsed(elapsed_seconds),
       'phase_rows' => phase_rows,
       'git' => git_state,
+      'delivery' => delivery_gate,
       'health' => health,
-      'recommended_next_steps' => build_finalize_recommendations(git_state, health, phase_rows)
+      'recommended_next_steps' => build_finalize_recommendations(git_state, delivery_gate, health, phase_rows)
     }
   end
 
@@ -1475,6 +1774,10 @@ class PlanCtl
 
     {
       'enabled' => true,
+      'repo_policy_mode' => repo_policy_mode,
+      'git_toplevel' => git_toplevel_path&.to_s,
+      'repo_root_matches_toplevel' => repo_root_matches_git_toplevel?,
+      'protected_branches' => protected_branches,
       'branch' => branch,
       'upstream' => upstream,
       'ahead_behind' => ahead_behind,
@@ -1485,8 +1788,29 @@ class PlanCtl
     }
   end
 
+  def build_delivery_gate_state
+    profile = project_profile
+    return { 'enabled' => false, 'issues' => [], 'notes' => [] } if profile.empty?
+
+    metrics = project_delivery_metrics
+    {
+      'enabled' => true,
+      'form' => profile['form'],
+      'delivery_tier' => profile['delivery_tier'],
+      'targets' => {
+        'length_chars' => profile['target_length_chars'],
+        'chapters' => profile['target_chapters'],
+        'chapter_pattern' => project_chapter_pattern,
+        'delivery_paths' => project_delivery_paths
+      },
+      'metrics' => metrics,
+      'required_artifact_gate_phases' => phases_missing_required_artifact_checks.map { |phase| phase['id'] },
+      'issues' => project_delivery_issues(metrics),
+      'notes' => project_delivery_notes(metrics)
+    }
+  end
+
   def build_finalize_health(state)
-    require 'digest'
     issues = []
     notes = []
 
@@ -1526,16 +1850,30 @@ class PlanCtl
       end
     end
 
+    issues.concat(repo_policy_issues)
+    notes.concat(repo_policy_notes)
+
+    delivery_gate = build_delivery_gate_state
+    if delivery_gate['enabled']
+      issues.concat(Array(delivery_gate['issues']))
+      notes.concat(Array(delivery_gate['notes']))
+    end
+
     {
       'issues' => issues,
       'notes' => notes
     }
   end
 
-  def build_finalize_recommendations(git_state, health, phase_rows)
+  def build_finalize_recommendations(git_state, delivery_gate, health, phase_rows)
     recs = []
 
     if git_state['enabled']
+      if git_state['repo_policy_mode'] == 'embedded-explicit'
+        recs << '当前项目处于 embedded-explicit 模式。发布前请确认它不再直接落在宿主仓库的默认分支上，优先切到独立 worktree 或功能分支。'
+      elsif !git_state['repo_root_matches_toplevel']
+        recs << '项目根目录不是 git top-level。若这是历史项目，请尽快迁移到独立仓库或 worktree，再继续新的 phase。'
+      end
       unless git_state['working_tree_clean']
         recs << "工作树尚有 #{git_state['pending_changes'].length} 处未提交变更，先 `git status` 审视并决定提交、暂存或丢弃，再做后续动作。"
       end
@@ -1557,13 +1895,27 @@ class PlanCtl
       recs << '当前为非 git 工作区模式（PHASE_CONTRACT_ALLOW_NON_GIT=1）。请按 `plan/common.md` 的偏离风险段所述的方式做一次外部审计与归档。'
     end
 
+    if delivery_gate['enabled'] && delivery_gate['issues'].any?
+      recs << "交付门禁未通过：#{delivery_gate['issues'].join('；')}。这意味着 workflow 完成了，但当前稿件还不应被当作目标交付层级的完成稿。"
+    end
+
     missing_summary_phases = phase_rows.reject { |r| r['summary'] && !r['summary'].strip.empty? }
     if missing_summary_phases.any?
       recs << "下列 phase 没有完成摘要，建议补一次手动追述：#{missing_summary_phases.map { |r| r['phase_id'] }.join(', ')}。"
     end
+    missing_evidence_phases = phase_rows.reject { |r| r['evidence_summary'] }
+    if missing_evidence_phases.any?
+      recs << "下列 phase 没有 artifact evidence 快照，后续审计只能依赖自然语言摘要：#{missing_evidence_phases.map { |r| r['phase_id'] }.join(', ')}。"
+    end
     missing_milestone = phase_rows.reject { |r| r['milestone_commit'] }
     if missing_milestone.any?
       recs << "下列 phase 找不到 `Phase-Id: <id>` trailer 对应的里程碑 commit：#{missing_milestone.map { |r| r['phase_id'] }.join(', ')}。可能是手动 commit 或 history 被改写过，请人工核对一遍。"
+    end
+    drifted_phases = phase_rows.select do |row|
+      row['evidence_drift'] && (row['evidence_drift']['changed_paths'].any? || row['evidence_drift']['missing_paths'].any?)
+    end
+    if drifted_phases.any?
+      recs << "以下 phase 的交付文件在完成后又发生了漂移，审计时请同时看 ledger evidence 和当前文件：#{drifted_phases.map { |row| row['phase_id'] }.join(', ')}。"
     end
 
     if health['issues'].any?
@@ -1605,11 +1957,21 @@ class PlanCtl
       puts "   completed_at: #{ts}"
       puts "   summary: #{row['summary'] || '(none recorded)'}"
       puts "   next_focus: #{row['next_focus']}" if row['next_focus'] && !row['next_focus'].empty?
+      puts "   evidence: #{row['evidence_summary']}" if row['evidence_summary']
+      if row['evidence_drift'] && (row['evidence_drift']['changed_paths'].any? || row['evidence_drift']['missing_paths'].any?)
+        changed = row['evidence_drift']['changed_paths']
+        missing = row['evidence_drift']['missing_paths']
+        puts "   evidence_drift: changed=#{changed.join(', ')}" if changed.any?
+        puts "   evidence_missing: #{missing.join(', ')}" if missing.any?
+      end
     end
     puts
     puts '--- Repository state ---'
     git = d['git']
     if git['enabled']
+      puts "Repo policy: #{git['repo_policy_mode']}"
+      puts "Git top-level: #{git['git_toplevel'] || '(unknown)'}"
+      puts "Repo root matches top-level: #{git['repo_root_matches_toplevel'] ? 'yes' : 'no'}"
       puts "Branch: #{git['branch'] || '(detached)'}"
       puts "Upstream: #{git['upstream'] || '(none)'}"
       if git['ahead_behind']
@@ -1624,6 +1986,29 @@ class PlanCtl
       puts "Last commit: #{git['last_commit']}" if git['last_commit']
     else
       puts 'git: disabled (PHASE_CONTRACT_ALLOW_NON_GIT=1 or non-git workspace)'
+    end
+    puts
+    puts '--- Delivery gate ---'
+    delivery = d['delivery']
+    if delivery['enabled']
+      puts "Form: #{delivery['form'] || '(unspecified)'}"
+      puts "Delivery tier: #{delivery['delivery_tier'] || '(unspecified)'}"
+      puts "Delivery paths: #{Array(delivery.dig('targets', 'delivery_paths')).join(', ')}"
+      puts "Current draft files: #{delivery.dig('metrics', 'file_count')}"
+      puts "Current total chars: #{delivery.dig('metrics', 'total_chars')}"
+      puts "Current chapter count: #{delivery.dig('metrics', 'chapter_count')} (pattern: #{delivery.dig('targets', 'chapter_pattern')})"
+      length_target = delivery.dig('targets', 'length_chars') || {}
+      chapter_target = delivery.dig('targets', 'chapters') || {}
+      puts "Target chars: min=#{length_target['min'] || '-'} max=#{length_target['max'] || '-'}"
+      puts "Target chapters: min=#{chapter_target['min'] || '-'} max=#{chapter_target['max'] || '-'}"
+      if delivery['issues'].empty?
+        puts 'Gate status: pass'
+      else
+        puts 'Gate status: fail'
+        delivery['issues'].each { |issue| puts "  issue: #{issue}" }
+      end
+    else
+      puts 'Delivery gate: not configured'
     end
     puts
     puts '--- Health checks ---'
@@ -1642,6 +2027,329 @@ class PlanCtl
     puts 'Reminder for the AI: render this dashboard verbatim to the human, layer your own deep review on top, and stop. Do not auto-execute the recommendations — they are deliberate human decision points.'
   end
 
+  def evidence_summary_for(entry)
+    evidence = entry['evidence']
+    return nil unless evidence.is_a?(Hash)
+
+    checks = Array(evidence['artifact_checks'])
+    return nil if checks.empty?
+
+    passed = checks.count { |check| check['passed'] }
+    "#{passed}/#{checks.length} artifact checks recorded"
+  end
+
+  def evidence_drift_for(entry)
+    evidence = entry['evidence']
+    return nil unless evidence.is_a?(Hash)
+
+    snapshots = Array(evidence['file_snapshots'])
+    return nil if snapshots.empty?
+
+    changed = []
+    missing = []
+    unchanged = []
+    snapshots.each do |snapshot|
+      path = snapshot['path']
+      current = file_snapshot(path)
+      if current.nil?
+        missing << path
+      elsif current['sha256'] == snapshot['sha256']
+        unchanged << path
+      else
+        changed << path
+      end
+    end
+
+    {
+      'changed_paths' => changed,
+      'missing_paths' => missing,
+      'unchanged_paths' => unchanged
+    }
+  end
+
+  def project_profile
+    profile = @manifest['project_profile']
+    profile.is_a?(Hash) ? profile : {}
+  end
+
+  def repo_policy_explicitly_configured?
+    @manifest['repo_policy'].is_a?(Hash)
+  end
+
+  def project_profile_explicitly_configured?
+    @manifest['project_profile'].is_a?(Hash)
+  end
+
+  def artifact_gate_policy
+    policy = project_profile['artifact_gate_policy']
+    policy.is_a?(Hash) ? policy : {}
+  end
+
+  def required_artifact_check_tiers
+    tiers = Array(artifact_gate_policy['required_for_tiers']).map(&:to_s).reject(&:empty?)
+    tiers.empty? ? DEFAULT_REQUIRED_ARTIFACT_CHECK_TIERS : tiers
+  end
+
+  def required_project_profile_fields
+    custom = artifact_gate_policy['required_project_profile_fields']
+    return DEFAULT_REQUIRED_PROJECT_PROFILE_FIELDS unless custom.is_a?(Hash)
+
+    DEFAULT_REQUIRED_PROJECT_PROFILE_FIELDS.merge(custom)
+  end
+
+  def required_project_profile_fields_for_current_tier
+    Array(required_project_profile_fields[project_profile['delivery_tier'].to_s]).map(&:to_s).reject(&:empty?)
+  end
+
+  def delivery_tier_requires_phase_artifact_checks?
+    explicit = artifact_gate_policy['require_phase_checks']
+    return explicit if explicit == true || explicit == false
+
+    required_artifact_check_tiers.include?(project_profile['delivery_tier'].to_s)
+  end
+
+  def phases_missing_required_artifact_checks
+    return [] unless delivery_tier_requires_phase_artifact_checks?
+
+    manifest_phases.select do |phase|
+      phase_delivery_relevant?(phase) && artifact_checks_for(phase).empty?
+    end
+  end
+
+  def phase_requires_artifact_checks?(phase)
+    delivery_tier_requires_phase_artifact_checks? && phase_delivery_relevant?(phase)
+  end
+
+  def phase_delivery_relevant?(phase)
+    allowed = Array(phase['allowed_paths']).map(&:to_s).reject(&:empty?)
+    return false if allowed.empty?
+
+    allowed.any? do |allowed_glob|
+      project_delivery_paths.any? do |delivery_glob|
+        glob_patterns_overlap?(allowed_glob, delivery_glob)
+      end
+    end
+  end
+
+  def glob_patterns_overlap?(left, right)
+    return true if left == right
+
+    left_prefix = glob_static_prefix(left)
+    right_prefix = glob_static_prefix(right)
+    return false if left_prefix.empty? || right_prefix.empty?
+
+    left_prefix.start_with?(right_prefix) || right_prefix.start_with?(left_prefix)
+  end
+
+  def glob_static_prefix(glob)
+    glob.to_s[/\A[^*?\[{]+/].to_s
+  end
+
+  def project_delivery_paths
+    return [] if project_profile.empty?
+
+    if project_profile.key?('delivery_paths')
+      return Array(project_profile['delivery_paths']).map { |entry| entry.to_s.strip }.reject(&:empty?)
+    end
+
+    ['story/draft/**/*.md']
+  end
+
+  def project_chapter_pattern
+    pattern = project_profile['target_chapter_pattern'].to_s.strip
+    pattern.empty? ? '^## ' : pattern
+  end
+
+  def project_delivery_metrics
+    paths = expand_project_globs(project_delivery_paths)
+    chapter_regex = Regexp.new(project_chapter_pattern)
+    total_chars = 0
+    chapter_count = 0
+    paths.each do |path|
+      content = @repo_root.join(path).read
+      total_chars += content.length
+      chapter_count += content.scan(chapter_regex).length
+    end
+
+    {
+      'paths' => paths,
+      'file_count' => paths.length,
+      'total_chars' => total_chars,
+      'chapter_count' => chapter_count
+    }
+  rescue RegexpError => error
+    {
+      'paths' => expand_project_globs(project_delivery_paths),
+      'file_count' => 0,
+      'total_chars' => 0,
+      'chapter_count' => 0,
+      'pattern_error' => error.message
+    }
+  end
+
+  def project_delivery_issues(metrics)
+    issues = []
+    issues.concat(project_profile_issues)
+    if project_delivery_paths.any? && metrics['file_count'].to_i.zero?
+      issues << "delivery paths matched no files: #{project_delivery_paths.join(', ')}"
+    end
+    if metrics['pattern_error']
+      issues << "invalid target_chapter_pattern: #{metrics['pattern_error']}"
+    end
+
+    length_target = project_profile['target_length_chars']
+    if length_target.is_a?(Hash)
+      min = integer_or_nil(length_target['min'])
+      max = integer_or_nil(length_target['max'])
+      total = metrics['total_chars'].to_i
+      issues << "current draft length #{total} chars is below target minimum #{min}" if min && total < min
+      issues << "current draft length #{total} chars exceeds target maximum #{max}" if max && total > max
+    end
+
+    chapter_target = project_profile['target_chapters']
+    if chapter_target.is_a?(Hash)
+      min = integer_or_nil(chapter_target['min'])
+      max = integer_or_nil(chapter_target['max'])
+      count = metrics['chapter_count'].to_i
+      issues << "current chapter count #{count} is below target minimum #{min}" if min && count < min
+      issues << "current chapter count #{count} exceeds target maximum #{max}" if max && count > max
+    end
+
+    missing_gate_phases = phases_missing_required_artifact_checks
+    if missing_gate_phases.any?
+      issues << "delivery tier #{project_profile['delivery_tier']} requires artifact_checks for delivery-bearing phases, but these phase(s) are missing them: #{missing_gate_phases.map { |phase| phase['id'] }.join(', ')}"
+    end
+
+    issues
+  end
+
+  def project_delivery_notes(metrics)
+    notes = []
+    return notes if project_profile.empty?
+
+    notes << "delivery paths tracked: #{project_delivery_paths.join(', ')}" if project_delivery_paths.any?
+    notes << "current draft files: #{metrics['file_count']}" if metrics['file_count']
+    if delivery_tier_requires_phase_artifact_checks?
+      notes << "artifact gates required for delivery-bearing phases under tier #{project_profile['delivery_tier']}"
+    end
+    notes
+  end
+
+  def project_profile_issues
+    return [] if project_profile.empty?
+
+    issues = []
+    missing = required_project_profile_fields_for_current_tier.reject do |field|
+      project_profile_field_present?(field)
+    end
+    if missing.any?
+      issues << "delivery tier #{project_profile['delivery_tier']} requires project_profile fields: #{missing.join(', ')}"
+    end
+
+    validate_project_profile_range(issues, 'target_length_chars')
+    validate_project_profile_range(issues, 'target_chapters')
+    validate_project_profile_chapter_pattern(issues)
+
+    if required_project_profile_fields_for_current_tier.include?('delivery_paths') && project_delivery_paths.empty?
+      issues << 'project_profile.delivery_paths must contain at least one glob'
+    end
+
+    issues
+  end
+
+  def validate_project_profile_range(issues, field)
+    target = project_profile[field]
+    required = required_project_profile_fields_for_current_tier.include?(field)
+    unless target.is_a?(Hash)
+      issues << "project_profile.#{field} must be a mapping with min/max targets" if required
+      return
+    end
+
+    min_raw = target['min']
+    max_raw = target['max']
+    min_present = target.key?('min') && !(min_raw.nil? || min_raw.to_s.strip.empty?)
+    max_present = target.key?('max') && !(max_raw.nil? || max_raw.to_s.strip.empty?)
+    if required && (!min_present || !max_present)
+      issues << "project_profile.#{field} must declare both min and max for delivery tier #{project_profile['delivery_tier']}"
+    end
+
+    min = integer_or_nil(min_raw)
+    max = integer_or_nil(max_raw)
+    if min_present && min.nil?
+      issues << "project_profile.#{field}.min must be an integer"
+    end
+    if max_present && max.nil?
+      issues << "project_profile.#{field}.max must be an integer"
+    end
+    if min && min <= 0
+      issues << "project_profile.#{field}.min must be a positive integer"
+    end
+    if max && max <= 0
+      issues << "project_profile.#{field}.max must be a positive integer"
+    end
+    if min && max && min > max
+      issues << "project_profile.#{field} has min #{min} greater than max #{max}"
+    end
+  end
+
+  def validate_project_profile_chapter_pattern(issues)
+    pattern = project_profile['target_chapter_pattern']
+    return unless project_profile.key?('target_chapter_pattern')
+
+    pattern_text = pattern.to_s.strip
+    return if pattern_text.empty?
+
+    Regexp.new(pattern_text)
+  rescue RegexpError => error
+    issues << "project_profile.target_chapter_pattern is not a valid regex: #{error.message}"
+  end
+
+  def project_profile_field_present?(field)
+    value = project_profile[field]
+    case value
+    when String
+      !value.strip.empty?
+    when Array
+      !value.map { |entry| entry.to_s.strip }.reject(&:empty?).empty?
+    when Hash
+      !value.empty?
+    else
+      !value.nil?
+    end
+  end
+
+  def legacy_manifest_migration_notes
+    notes = []
+    story_phases = phases_matching_path_hints(DEFAULT_STORY_PATH_HINTS)
+    draft_phases = phases_matching_path_hints(DEFAULT_DRAFT_PATH_HINTS)
+
+    if story_phases.any? && !repo_policy_explicitly_configured?
+      notes << "legacy fiction manifest is missing repo_policy; add repo_policy.mode (usually standalone) before the next major writing run. Story phase(s): #{story_phases.map { |phase| phase['id'] }.join(', ')}"
+    end
+    if draft_phases.any? && !project_profile_explicitly_configured?
+      notes << "legacy draft-bearing manifest is missing project_profile; add delivery_tier, delivery_paths, target_length_chars, and target_chapters to enable delivery gates. Draft phase(s): #{draft_phases.map { |phase| phase['id'] }.join(', ')}"
+    end
+
+    notes
+  end
+
+  def phases_matching_path_hints(hints)
+    manifest_phases.select do |phase|
+      allowed = Array(phase['allowed_paths']).map(&:to_s).reject(&:empty?)
+      allowed.any? do |allowed_glob|
+        hints.any? { |hint| glob_patterns_overlap?(allowed_glob, hint) }
+      end
+    end
+  end
+
+  def expand_project_globs(globs)
+    globs.flat_map do |glob|
+      Dir.glob(@repo_root.join(glob).to_s).map do |path|
+        Pathname.new(path).relative_path_from(@repo_root).to_s
+      end
+    end.uniq.sort
+  end
+
   def load_yaml(path)
     YAML.safe_load(File.read(path), permitted_classes: [], aliases: false) || {}
   rescue Psych::SyntaxError => error
@@ -1651,25 +2359,26 @@ class PlanCtl
   end
 end
 
-def usage
+def usage(command_base)
   <<~USAGE
     Usage:
-      ruby scripts/planctl resolve <phase-id> [--format prompt|json|paths] [--strict]
-      ruby scripts/planctl next [--format prompt|json|paths] [--strict]
-      ruby scripts/planctl advance [--format prompt|json] [--strict]
-      ruby scripts/planctl status [--format text|json]
-      ruby scripts/planctl complete <phase-id> [--summary TEXT] [--next-focus TEXT] [--continue]
-      ruby scripts/planctl revert <phase-id> [--mode revert|reset] [--summary TEXT]
-      ruby scripts/planctl handoff [--format prompt|json] [--write]
-      ruby scripts/planctl resume [--strict]
-      ruby scripts/planctl doctor
-      ruby scripts/planctl finalize [--format text|json]
+      #{command_base} resolve <phase-id> [--format prompt|json|paths] [--strict]
+      #{command_base} next [--format prompt|json|paths] [--strict]
+      #{command_base} advance [--format prompt|json] [--strict]
+      #{command_base} status [--format text|json]
+      #{command_base} complete <phase-id> [--summary TEXT] [--next-focus TEXT] [--continue]
+      #{command_base} revert <phase-id> [--mode revert|reset] [--summary TEXT]
+      #{command_base} handoff [--format prompt|json] [--write]
+      #{command_base} resume [--strict]
+      #{command_base} doctor
+      #{command_base} finalize [--format text|json]
   USAGE
 end
 
 script_path = File.expand_path(__FILE__)
 repo_root = File.expand_path('..', File.dirname(script_path))
-planctl = PlanCtl.new(repo_root)
+planctl = PlanCtl.new(repo_root, program_path: $PROGRAM_NAME)
+usage_banner = usage(planctl.cli_command)
 
 command = ARGV.shift
 
@@ -1677,7 +2386,7 @@ case command
 when 'resolve'
   options = { format: 'prompt', strict: false }
   parser = OptionParser.new do |opts|
-    opts.banner = usage
+    opts.banner = usage_banner
     opts.on('--format FORMAT', 'prompt, json, or paths') { |value| options[:format] = value }
     opts.on('--strict', 'Exit non-zero if dependencies or context files are missing') { options[:strict] = true }
   end
@@ -1691,7 +2400,7 @@ when 'resolve'
 when 'next'
   options = { format: 'prompt', strict: false }
   parser = OptionParser.new do |opts|
-    opts.banner = usage
+    opts.banner = usage_banner
     opts.on('--format FORMAT', 'prompt, json, or paths') { |value| options[:format] = value }
     opts.on('--strict', 'Exit non-zero if dependencies or context files are missing') { options[:strict] = true }
   end
@@ -1704,7 +2413,7 @@ when 'next'
 when 'advance'
   options = { format: 'prompt', strict: false }
   parser = OptionParser.new do |opts|
-    opts.banner = usage
+    opts.banner = usage_banner
     opts.on('--format FORMAT', 'prompt or json') { |value| options[:format] = value }
     opts.on('--strict', 'Exit non-zero only for real blockers; placeholder promotion remains an internal action') { options[:strict] = true }
   end
@@ -1717,7 +2426,7 @@ when 'advance'
 when 'status'
   options = { format: 'text' }
   parser = OptionParser.new do |opts|
-    opts.banner = usage
+    opts.banner = usage_banner
     opts.on('--format FORMAT', 'text or json') { |value| options[:format] = value }
   end
   parser.parse!(ARGV)
@@ -1729,7 +2438,7 @@ when 'status'
 when 'complete'
   options = { summary: nil, next_focus: nil, continue: false }
   parser = OptionParser.new do |opts|
-    opts.banner = usage
+    opts.banner = usage_banner
     opts.on('--summary TEXT', 'Concise completion summary to persist for resume') { |value| options[:summary] = value }
     opts.on('--next-focus TEXT', 'Concise note about what should happen next') { |value| options[:next_focus] = value }
     opts.on('--continue', 'Resolve the next internal action immediately after completion') { options[:continue] = true }
@@ -1744,7 +2453,7 @@ when 'complete'
 when 'revert'
   options = { mode: 'revert', summary: nil }
   parser = OptionParser.new do |opts|
-    opts.banner = usage
+    opts.banner = usage_banner
     opts.on('--mode MODE', 'revert (default, safe) or reset (destructive, rewrites history)') { |value| options[:mode] = value }
     opts.on('--summary TEXT', 'Optional reason recorded in the completion log') { |value| options[:summary] = value }
   end
@@ -1758,7 +2467,7 @@ when 'revert'
 when 'handoff'
   options = { format: 'prompt', write: false }
   parser = OptionParser.new do |opts|
-    opts.banner = usage
+    opts.banner = usage_banner
     opts.on('--format FORMAT', 'prompt or json') { |value| options[:format] = value }
     opts.on('--write', 'Write the current handoff snapshot to plan/handoff.md') { options[:write] = true }
   end
@@ -1771,7 +2480,7 @@ when 'handoff'
 when 'resume'
   options = { strict: false }
   parser = OptionParser.new do |opts|
-    opts.banner = usage
+    opts.banner = usage_banner
     opts.on('--strict', 'Exit non-zero if next phase is not ready') { options[:strict] = true }
   end
   parser.parse!(ARGV)
@@ -1781,7 +2490,7 @@ when 'resume'
   end
   planctl.resume(strict: options[:strict])
 when 'doctor'
-  parser = OptionParser.new { |opts| opts.banner = usage }
+  parser = OptionParser.new { |opts| opts.banner = usage_banner }
   parser.parse!(ARGV)
   if ARGV.any?
     warn parser.to_s
@@ -1791,7 +2500,7 @@ when 'doctor'
 when 'finalize'
   options = { format: 'text' }
   parser = OptionParser.new do |opts|
-    opts.banner = usage
+    opts.banner = usage_banner
     opts.on('--format FORMAT', 'text or json') { |value| options[:format] = value }
   end
   parser.parse!(ARGV)
@@ -1801,6 +2510,6 @@ when 'finalize'
   end
   planctl.finalize(format: options[:format])
 else
-  warn usage
+  warn usage_banner
   exit 1
 end

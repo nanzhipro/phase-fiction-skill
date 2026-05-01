@@ -1,0 +1,77 @@
+version: 1
+id: epic-fantasy
+label: Epic Fantasy
+family: epic-fantasy
+engine: quest-driven
+description: >-
+  面向多阵营、大地理跨度和长期主线承诺的史诗奇幻 profile，重点是世界规则、
+  阵营压力、远程 payoff 和规模控制，而不是单点谜题或单线情感推进。
+selection_hints:
+  suitable_for:
+    - 多阵营史诗奇幻
+    - 远征 / 使命 / 预言驱动的长篇
+    - 需要长期世界观与势力变化的系列开篇
+  avoid_when:
+    - 单房间高压悬疑
+    - 以亲密关系推进为唯一主轴的故事
+input_extensions:
+  required_questions:
+    - id: world_scale
+      prompt: 这部作品的世界规模有多大：单国、跨国、大陆级，还是多位面？
+    - id: power_rule_cost
+      prompt: 核心力量体系的代价、禁区和误用后果是什么？
+    - id: promise_horizon
+      prompt: 第一部要兑现什么，哪些 payoff 明确留到更后面的卷？
+defaults:
+  story_artifacts:
+    required:
+      - path: story/canon/world-bible.md
+        purpose: 记录世界规则、地理、历史与力量体系
+      - path: story/canon/faction-map.md
+        purpose: 记录阵营目标、冲突与联盟关系
+      - path: story/canon/power-costs.md
+        purpose: 锁定力量使用成本与规则边界
+      - path: story/outline/payoff-roadmap.md
+        purpose: 规划近程与远程 payoff 的分层兑现
+    optional:
+      - path: story/canon/prophecy-ledger.md
+        purpose: 当预言 / 神话线会长期影响主线时显式落盘
+  phase_catalog:
+    - id: phase-0-premise-promise
+      purpose: 锁定史诗承诺、主线目标与失败代价
+      required: true
+    - id: phase-1-cast-engine
+      purpose: 建立核心队伍、对立阵营与角色使命差异
+      required: true
+    - id: phase-2-world-canon
+      purpose: 固定世界规则、阵营地图与力量成本
+      required: true
+    - id: phase-3-conflict-fronts
+      purpose: 设计多条冲突战线的升级关系
+      required: true
+    - id: phase-4-arc-roadmap
+      purpose: 安排近程战役、卷级高潮与远程 payoff
+      required: true
+    - id: phase-5-plus-draft-batches
+      purpose: 分批起稿并维持规模感与主线聚焦
+      required: true
+revision_passes:
+  - id: lore-consistency-pass
+    focus: 检查世界规则与历史前后一致
+  - id: scale-control-pass
+    focus: 检查阵营、支线和地理跨度是否压垮主线
+  - id: payoff-convergence-pass
+    focus: 检查卷内 payoff 与长线承诺的接缝是否成立
+quality_focus:
+  - world rule consistency
+  - faction pressure clarity
+  - payoff layering
+  - scale control
+common_md_must_cover:
+  - 世界规则一旦建立就不能被临时特例抹掉
+  - 支线扩张不得抢走主线推进权
+  - 远程承诺必须分层兑现，不能只铺不收
+recommended_overlays:
+  - multi-pov
+  - countdown
+  - serial-release

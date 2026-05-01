@@ -4,7 +4,7 @@
 
 ## 环境前提
 
-本仓库建议是 git 工作区（`git rev-parse --is-inside-work-tree` 返回 `true`）。`scripts/planctl` 的 `advance` / `next` / `resolve` / `complete` / `handoff` 在检测到非 git 工作区时会以 **exit code 3** 拒绝运行（`status` 只打警告不拦截，保证诊断可用）。仅当确需不使用 git 时，可通过 `PHASE_CONTRACT_ALLOW_NON_GIT=1` 环境变量显式绕过，且必须在 `plan/common.md` 中记录偏离风险与补偿方案。
+本仓库默认应是 **独立 git 工作区**：`git rev-parse --is-inside-work-tree` 返回 `true`，且 `git rev-parse --show-toplevel` 应与项目根目录相同。`scripts/planctl` 的 `advance` / `next` / `resolve` / `complete` / `handoff` 在检测到非 git 工作区，或 `repo_policy.mode=standalone` 但项目根嵌在上层仓库内时，会以 **exit code 3** 拒绝运行（`status` 只打警告不拦截，保证诊断可用）。仅当确需不使用 git 时，可通过 `PHASE_CONTRACT_ALLOW_NON_GIT=1` 环境变量显式绕过，且必须在 `plan/common.md` 中记录偏离风险与补偿方案。
 
 ## 目标
 
@@ -26,7 +26,13 @@
 - 每个 phase 的 `plan_file`
 - 每个 phase 的 `execution_file`
 - 每次执行必须读取的 `required_context`
+- `workflow_profile`（base profile、engine、overlays，以及它们派生出的 phase 图）
+- `repo_policy`（独立仓库 / 嵌入式项目策略）
+- `project_profile`（目标体量、章节数、交付层级）
+- `artifact_checks`（机器可执行的 phase 级交付门禁）
 - 连续执行和压缩恢复规则
+
+其中 `workflow_profile` 不是装饰字段。脚手架应先读取 `profiles/<profile>/profile.yaml` 的 base phase catalog，再应用 [profiles/overlays.yaml](../profiles/overlays.yaml) 里被选中的 overlays；overlay 只允许通过 `phase_merge.operations` 里显式的 `targets` / `anchor_targets` 解析当前 profile 的 phase id，最后才落成 `manifest.phases`。
 
 ### `plan/common.md`
 
@@ -128,6 +134,7 @@ ruby scripts/planctl complete <phase-id> --summary "<summary>" --next-focus "<ne
 
 - `plan/state.yaml` 记录该 phase 已完成
 - completion log 记录摘要和下一步焦点
+- 若配置了 `artifact_checks`，completion log 同时记录该 phase 完成时的 evidence 快照（检查结果 + 文件摘要）
 - `--continue` 会立即运行 `advance`，输出后续内部动作
 
 ## 如何进入下一 Phase
@@ -174,9 +181,9 @@ ruby scripts/planctl finalize
 - 写入 `plan/state.yaml.finalized_at`
 - 刷新 `plan/handoff.md`
 - 执行最终 git 收尾：`git add -A` → `git commit -F -` → `git push`
-- 打印最终执行仪表盘
+- 打印最终执行仪表盘，其中包括 repo policy、delivery gate、phase evidence 与 doctor 级问题
 
-AI 拿到 finalize 输出后，必须做一次深入审视，并把以下决策点交还人类：是否连载 / 投稿 / 对外发布，是否打手稿标签，是否归档 `plan/`，是否安排编辑、beta 读者、事实核查或敏感性审读。
+AI 拿到 finalize 输出后，必须做一次深入审视，并把以下决策点交还人类：是否连载 / 投稿 / 对外发布，是否打手稿标签，是否归档 `plan/`，是否安排编辑、beta 读者、事实核查或敏感性审读。注意：全部 phase 完成只代表 workflow 结束；如果 delivery gate 仍未过线，例如字数或章节数明显低于目标，仍不能把当前产物当作目标层级的完成稿。
 
 ## 如何在压缩或新会话后继续执行
 

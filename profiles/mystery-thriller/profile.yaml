@@ -1,0 +1,77 @@
+version: 1
+id: mystery-thriller
+label: Mystery / Thriller
+family: mystery-thriller
+engine: clue-driven
+description: >-
+  面向封闭空间悬疑、阴谋追查和高压倒计时类小说的基础 profile，重点是线索公平性、
+  假解答、中段翻面和终局揭示回收。
+selection_hints:
+  suitable_for:
+    - 封闭空间悬疑
+    - 连环阴谋追查
+    - 倒计时式惊悚小说
+  avoid_when:
+    - 关系推进是唯一主轴的情感小说
+    - 几乎没有谜题与证据回收压力的纯人物流作品
+input_extensions:
+  required_questions:
+    - id: hidden_truth_shape
+      prompt: 真相属于哪一类：单一凶案、旧案回潮、制度掩盖，还是多层责任链？
+    - id: reveal_model
+      prompt: 终局更偏向谁做了、为什么能持续、还是如何公开揭示？
+    - id: misdirection_budget
+      prompt: 你希望假解答强到什么程度，哪些误导是允许的，哪些误导会伤害公平性？
+defaults:
+  story_artifacts:
+    required:
+      - path: story/canon/case-file.md
+        purpose: 记录案件真相层与旧案/现案关系
+      - path: story/canon/clue-ledger.md
+        purpose: 记录线索、误导与回收关系
+      - path: story/canon/timeline.md
+        purpose: 保持时间线与证据链一致
+      - path: story/outline/tension-waves.md
+        purpose: 控制疑点、风险和揭示节奏
+    optional:
+      - path: story/canon/suspect-web.md
+        purpose: 当嫌疑人与动机链较复杂时显式落盘
+  phase_catalog:
+    - id: phase-0-premise-promise
+      purpose: 定义案件问题、故事承诺与失败代价
+      required: true
+    - id: phase-1-cast-engine
+      purpose: 建立嫌疑人网络、关系张力与动机差异
+      required: true
+    - id: phase-2-truth-lattice
+      purpose: 锁定真相层、线索账本与误导结构
+      required: true
+    - id: phase-3-pressure-system
+      purpose: 搭建封闭空间、时钟或围猎压力系统
+      required: true
+    - id: phase-4-arc-wave-design
+      purpose: 规划假解答、中段翻面与终局揭示的弧线
+      required: true
+    - id: phase-5-plus-draft-batches
+      purpose: 分批起稿并保持 clue fairness
+      required: true
+revision_passes:
+  - id: structural-suspense-pass
+    focus: 检查假解答、中段翻面和终局摊牌是否成立
+  - id: clue-fairness-pass
+    focus: 检查关键答案是否都能在前文回溯
+  - id: reveal-compression-pass
+    focus: 压缩解释段落，避免终局变成说明文
+quality_focus:
+  - clue fairness
+  - suspect plausibility
+  - reveal payoff
+  - pressure escalation
+common_md_must_cover:
+  - 真相必须现实可解释，不能靠超自然临时翻盘
+  - 关键揭示必须能回溯到前文线索
+  - 误导必须服务人物动机，不能只为骗读者
+recommended_overlays:
+  - closed-circle
+  - countdown
+  - single-pov

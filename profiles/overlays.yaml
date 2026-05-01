@@ -1,0 +1,222 @@
+version: 1
+merge_spec:
+  apply_order:
+    - validate_overlay_compatibility
+    - resolve_current_profile_targets
+    - apply_phase_merge.operations_in_file_order
+    - merge_artifact_additions
+    - merge_common_md_must_cover
+    - apply_user_phase_overrides_last
+  supported_ops:
+    - op: require_phase
+      effect: 对当前 profile 解析出一个必须保留的现有 phase；若 phase 不存在则立即失败。
+    - op: ensure_phase_after
+      effect: 对当前 profile 解析出一个 anchor；若目标 phase 不存在则插入，若已存在则保留单份并移动到 anchor 之后。
+  failure_policy:
+    incompatible_profile: fail
+    unsupported_op: fail
+    missing_profile_target: fail
+    missing_required_phase: fail
+    missing_anchor_phase: fail
+    duplicate_inserted_phase_id: reuse_existing_and_move_after_anchor
+overlays:
+  - id: closed-circle
+    label: Closed Circle
+    purpose: 把角色活动范围锁进有限空间，强化嫌疑网络与离场限制。
+    compatible_profiles:
+      - mystery-thriller
+      - horror
+      - custom
+    phase_merge:
+      operations:
+        - op: require_phase
+          targets:
+            mystery-thriller: phase-1-cast-engine
+            horror: phase-1-cast-engine
+            custom: phase-1-cast-engine
+        - op: require_phase
+          targets:
+            mystery-thriller: phase-3-pressure-system
+            horror: phase-3-dread-escalation-design
+            custom: phase-3-pressure-system
+    artifact_additions:
+      - path: story/canon/closed-circle-rules.md
+        purpose: 记录空间封闭规则、离场条件和破局代价
+    common_md_must_cover:
+      - 封闭规则一旦建立就不能中途失效
+  - id: countdown
+    label: Countdown
+    purpose: 为剧情引入明确倒计时，使揭示和决策持续加压。
+    compatible_profiles:
+      - mystery-thriller
+      - horror
+      - epic-fantasy
+      - custom
+    phase_merge:
+      operations:
+        - op: require_phase
+          targets:
+            mystery-thriller: phase-3-pressure-system
+            epic-fantasy: phase-3-conflict-fronts
+            horror: phase-3-dread-escalation-design
+            custom: phase-3-pressure-system
+        - op: require_phase
+          targets:
+            mystery-thriller: phase-4-arc-wave-design
+            epic-fantasy: phase-4-arc-roadmap
+            horror: phase-4-survival-wave-batches
+            custom: phase-4-arc-wave-design
+    artifact_additions:
+      - path: story/canon/countdown-clock.md
+        purpose: 记录倒计时节点、触发条件与失败后果
+    common_md_must_cover:
+      - 倒计时不能只在嘴上存在，必须改变角色选择成本
+  - id: single-pov
+    label: Single POV
+    purpose: 限制叙事视角，提高沉浸与信息控制强度。
+    compatible_profiles:
+      - mystery-thriller
+      - literary
+      - horror
+      - custom
+    phase_merge:
+      operations:
+        - op: require_phase
+          targets:
+            mystery-thriller: phase-0-premise-promise
+            literary: phase-0-premise-promise
+            horror: phase-0-premise-promise
+            custom: phase-0-premise-promise
+        - op: require_phase
+          targets:
+            mystery-thriller: phase-1-cast-engine
+            literary: phase-1-cast-engine
+            horror: phase-1-cast-engine
+            custom: phase-1-cast-engine
+    common_md_must_cover:
+      - 非 POV 角色的内部信息不能越权直出
+  - id: dual-pov
+    label: Dual POV
+    purpose: 让两条核心视角交替推进，常用于关系拉扯与双线误解。
+    compatible_profiles:
+      - romance
+      - literary
+      - custom
+    phase_merge:
+      operations:
+        - op: require_phase
+          targets:
+            romance: phase-1-cast-engine
+            literary: phase-1-cast-engine
+            custom: phase-1-cast-engine
+        - op: require_phase
+          targets:
+            romance: phase-3-scene-beat-design
+            literary: phase-4-scene-pressure-design
+            custom: phase-3-scene-beat-design
+    artifact_additions:
+      - path: story/canon/pov-switch-rules.md
+        purpose: 记录 POV 切换节奏、边界与信息分配规则
+    common_md_must_cover:
+      - 每个 POV 都必须带来不可替代的信息或情绪压力
+  - id: multi-pov
+    label: Multi POV
+    purpose: 支撑群像叙事或大规模世界推进，但要求更强的视角纪律。
+    compatible_profiles:
+      - epic-fantasy
+      - literary
+      - custom
+    phase_merge:
+      operations:
+        - op: ensure_phase_after
+          anchor_targets:
+            epic-fantasy: phase-1-cast-engine
+            literary: phase-1-cast-engine
+            custom: phase-1-cast-engine
+          phase:
+            id: phase-2-viewpoint-discipline
+            purpose: 显式定义 POV 名单、切换条件和主线归属
+            required: true
+    artifact_additions:
+      - path: story/canon/pov-roster.md
+        purpose: 记录 POV 角色名单与各自负责的主冲突片段
+    common_md_must_cover:
+      - 群像扩张不能吞掉主线目标
+  - id: slow-burn
+    label: Slow Burn
+    purpose: 延长情感兑现周期，强调拉扯、克制与迟到回报。
+    compatible_profiles:
+      - romance
+      - literary
+      - custom
+    phase_merge:
+      operations:
+        - op: require_phase
+          targets:
+            romance: phase-2-relationship-arc
+            literary: phase-2-inner-conflict-map
+            custom: phase-2-relationship-arc
+        - op: require_phase
+          targets:
+            romance: phase-3-scene-beat-design
+            literary: phase-4-scene-pressure-design
+            custom: phase-3-scene-beat-design
+    artifact_additions:
+      - path: story/outline/slow-burn-ladder.md
+        purpose: 记录关系推进台阶与每次靠近/退避的代价
+    common_md_must_cover:
+      - 关系推进必须持续给读者可感知回报，不能只靠拖延
+  - id: serial-release
+    label: Serial Release
+    purpose: 把项目改造成连载节奏，强化单批次可交付性与尾部牵引。
+    compatible_profiles:
+      - romance
+      - epic-fantasy
+      - horror
+      - custom
+    phase_merge:
+      operations:
+        - op: require_phase
+          targets:
+            romance: phase-4-plus-draft-batches
+            epic-fantasy: phase-5-plus-draft-batches
+            horror: phase-5-plus-draft-batches
+            custom: phase-5-plus-draft-batches
+        - op: ensure_phase_after
+          anchor_targets:
+            romance: phase-4-plus-draft-batches
+            epic-fantasy: phase-5-plus-draft-batches
+            horror: phase-5-plus-draft-batches
+            custom: phase-5-plus-draft-batches
+          phase:
+            id: phase-6-reader-retention-pass
+            purpose: 检查每批结尾牵引、摘要回顾与下批承接
+            required: true
+    artifact_additions:
+      - path: story/outline/release-batch-map.md
+        purpose: 记录每批发布时间点、批次目标与 cliffhanger 布局
+    common_md_must_cover:
+      - 每个连载批次都要有独立满足感与下一批牵引
+  - id: nonlinear-timeline
+    label: Nonlinear Timeline
+    purpose: 让时间线错位成为结构资源，而不是阅读噪音。
+    compatible_profiles:
+      - literary
+      - mystery-thriller
+      - custom
+    phase_merge:
+      operations:
+        - op: ensure_phase_after
+          anchor_targets:
+            literary: phase-1-cast-engine
+            mystery-thriller: phase-1-cast-engine
+            custom: phase-1-cast-engine
+          phase:
+            id: phase-2-timeline-map
+            purpose: 明确事件发生顺序、叙述顺序和隐藏顺序
+            required: true
+    artifact_additions:
+      - path: story/canon/timeline-split.md
+        purpose: 记录真实时间线与叙述时间线的分离关系
+    common_md_must_cover:
+      - 时间线错位必须服务主题或揭示，而不是制造无意义迷雾

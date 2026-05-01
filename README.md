@@ -1,8 +1,8 @@
 # phase-fiction-skill
 
-**About**: Disk-backed scaffolding for long-form fiction projects that need to survive context compression, fresh sessions, and Agent switches.
+**About**: Disk-backed scaffolding for long-form fiction projects that need to survive context compression, new sessions, and Agent handoffs.
 
-Model a novel or serial fiction project as an **ordered chain of story phases**: premise, cast, canon, plot engine, scene batches, and revision passes all live on disk instead of being entrusted to the model's memory.
+Treat a novel or serial fiction project as an **ordered chain of story phases**: premise, cast, canon, plot engine, scene batches, and revision passes all live on disk instead of being left to model memory.
 
 > _"Move story continuity out of model memory and into the repository filesystem."_
 
@@ -15,15 +15,23 @@ Model a novel or serial fiction project as an **ordered chain of story phases**:
 
 ---
 
-**Quick links**: [Recommended scenarios](#recommended-scenarios) · [Install](#install--update) · [Quick start](#quick-start) · [How it works](#how-it-works) · [Documentation](#documentation-map)
+**Quick links**: [Highlights](#highlights) · [Recommended scenarios](#recommended-scenarios) · [Install](#install--update) · [Quick start](#quick-start) · [How it works](#how-it-works) · [Framework vs generated structure](#framework-vs-generated-structure) · [Profiles](#profiles) · [Included example](#included-example) · [Documentation](#documentation-map)
 
 ## Why
 
-Any AI that tries to help with a novel across many sessions will eventually lose one of the things that matters most: the story promise, character intent, canon, pacing, or revision target. A bigger prompt does not fix that. This project fixes it by externalizing story state into files and letting `planctl` enforce sequence and recovery.
+Any AI that helps with a novel across many sessions will eventually lose track of something that matters: the story promise, character intent, canon, pacing, or the current revision target. A bigger prompt does not solve that. This project does it by moving story state into files and letting `planctl` enforce sequence and recovery.
+
+## Highlights
+
+- Keep premise, cast, canon, outline, draft, and revision work in explicit disk-backed phases instead of chat memory.
+- Recover deterministically after context compression with the same `manifest -> handoff -> advance --strict` sequence every time.
+- Enforce completion through `planctl`, so progress lives in repository state rather than in a previous conversation.
+- Add machine-readable delivery gates with `project_profile` and `artifact_checks` when a manuscript needs real draft targets.
+- Inspect a generated sample project end to end in [novels/grassland-train-mystery/plan/manifest.yaml](./novels/grassland-train-mystery/plan/manifest.yaml), [novels/grassland-train-mystery/story/outline/arc-map.md](./novels/grassland-train-mystery/story/outline/arc-map.md), and [novels/grassland-train-mystery/story/draft/part-1/chapters-01-04.md](./novels/grassland-train-mystery/story/draft/part-1/chapters-01-04.md).
 
 ## Recommended scenarios
 
-Use this Skill when the project is a novel, novella, serial fiction run, or full-manuscript revision that will take multiple sessions and needs stable continuity.
+Use this Skill when the project is a novel, novella, serial fiction project, or full-manuscript revision that will span multiple sessions and needs stable continuity.
 
 It fits especially well when you are doing:
 
@@ -52,13 +60,53 @@ Three layers stay separate:
 | Layer | Role | Authored by |
 | --- | --- | --- |
 | **Enforcement**: `.github/copilot-instructions.md` · `CLAUDE.md` · `AGENTS.md` | Turns the rules from "suggestions" into session-level preconditions | Human (all three kept byte-identical) |
-| **Scheduler**: `scripts/planctl` | Decides the next step, checks dependencies, writes the ledger atomically | Reuse the script in this repo |
+| **Scheduler**: `scripts/planctl` in generated projects | Decides the next step, checks dependencies, writes the ledger atomically | Source from `scripts/planctl.rb` in this repo |
 | **Contracts**: `plan/manifest.yaml` · `plan/common.md` · `plan/phases/*` · `plan/execution/*` | Defines the story phase, its objective, and the current writing or revision boundary | Human (AI-assisted) |
+
+This repository now keeps only `scripts/planctl.rb` as the canonical source. Generated projects still copy that file into their own `scripts/planctl`, so runtime commands stay stable even though the source repo no longer carries a second entrypoint file.
 
 Runtime state lives in two files, owned exclusively by the scheduler:
 
 - `plan/state.yaml` — objective progress ledger (atomically written on `complete`)
 - `plan/handoff.md` — compression-recovery anchor (auto-refreshed on `complete`)
+
+Two additional guardrails now matter for production use:
+
+- `repo_policy` — prevents a generated fiction project from silently living inside a parent repo's default branch unless you opt into `embedded-explicit` on purpose.
+- `project_profile` + `artifact_checks` — turn target length, chapter count, and phase-level deliverables into machine-readable gates that `complete`, `doctor`, and `finalize` can inspect.
+
+## Framework vs generated structure
+
+This Skill defines the meta-framework for long-form fiction work. It tells the Agent how to collect inputs, split the work into phases, keep contracts on disk, and recover after compression.
+
+It does **not** ship a hidden one-size-fits-all novel outline. The concrete structure of a given project — phase split, arc shape, beat map, character network, draft batches, revision passes — is generated during the run from the user's premise, constraints, and the methodology in this repo, then written into that project's own files.
+
+In other words: the Skill provides the machine for building and preserving structure; each fiction project still generates its own structure at runtime and keeps it as repository state.
+
+## Profiles
+
+The core workflow stays genre-agnostic. Genre-specific defaults belong in the profile layer, not in a forked scheduler.
+
+- Core layer: `planctl`, contracts, handoff, ledger, finalize, delivery gates
+- Profile layer: genre / engine defaults such as required artifacts, recommended phase catalogs, revision passes, and quality focus
+- Project layer: the concrete manifest, outline, draft, and revision output for a single novel
+
+See [profiles/README.md](./profiles/README.md) for the boundary and schema, [profiles/overlays.yaml](./profiles/overlays.yaml) for the shared overlay catalog, [profiles/examples.md](./profiles/examples.md) for derived phase graph examples, and five starter profiles:
+
+- [profiles/mystery-thriller/profile.yaml](./profiles/mystery-thriller/profile.yaml)
+- [profiles/romance/profile.yaml](./profiles/romance/profile.yaml)
+- [profiles/epic-fantasy/profile.yaml](./profiles/epic-fantasy/profile.yaml)
+- [profiles/literary/profile.yaml](./profiles/literary/profile.yaml)
+- [profiles/horror/profile.yaml](./profiles/horror/profile.yaml)
+
+## Included example
+
+This repo includes a generated sample project under [novels/grassland-train-mystery](./novels/grassland-train-mystery/plan/manifest.yaml). Use it as a concrete reference for what a generated fiction project looks like in practice.
+
+- Planning contract: [novels/grassland-train-mystery/plan/manifest.yaml](./novels/grassland-train-mystery/plan/manifest.yaml)
+- Story architecture: [novels/grassland-train-mystery/story/outline/arc-map.md](./novels/grassland-train-mystery/story/outline/arc-map.md) and [novels/grassland-train-mystery/story/outline/tension-waves.md](./novels/grassland-train-mystery/story/outline/tension-waves.md)
+- Draft output: [novels/grassland-train-mystery/story/draft/part-1/chapters-01-04.md](./novels/grassland-train-mystery/story/draft/part-1/chapters-01-04.md), [novels/grassland-train-mystery/story/draft/part-2/chapters-05-08.md](./novels/grassland-train-mystery/story/draft/part-2/chapters-05-08.md), and [novels/grassland-train-mystery/story/draft/part-3/chapters-09-12.md](./novels/grassland-train-mystery/story/draft/part-3/chapters-09-12.md)
+- Revision output: [novels/grassland-train-mystery/story/revision/structural-pass.md](./novels/grassland-train-mystery/story/revision/structural-pass.md)
 
 ## Install & update
 
@@ -83,7 +131,7 @@ npx skills add nanzhipro/phase-fiction-skill --force
 npx skills remove phase-fiction-skill -g
 ```
 
-Once installed, just tell the Agent to plan or continue a novel with `phase-fiction-skill`. The discovery description lives in [SKILL.md](./SKILL.md).
+Once installed, tell the Agent to plan or continue a novel with `phase-fiction-skill`. The discovery description lives in [SKILL.md](./SKILL.md).
 
 ## Golden loop
 
@@ -118,11 +166,12 @@ Phase boundaries are internal, not user confirmation points. If the next current
 ## Prerequisites
 
 - The target repo is a Git worktree (`git rev-parse --is-inside-work-tree` returns `true`). Outside a Git workspace there is no objective basis for Phase-level whitelist diffing or rollback; this is blocked by default. Explicit opt-out only: `PHASE_CONTRACT_ALLOW_NON_GIT=1`.
+- The default repo strategy is a standalone project root. If the fiction project is intentionally embedded inside a larger mono-repo, declare `repo_policy.mode: embedded-explicit` and do not keep writing milestones directly onto `main` / `master`.
 - `ruby` 2.6 or newer is available locally. `planctl` is a single-file Ruby script with zero gem dependencies.
 
 ## Quick start
 
-When used as an Agent Skill, just say "plan this novel with phase-fiction-skill" inside Copilot / Claude Code / Codex. The Skill collects the premise, phase split, and hard constraints, then generates the artifact set described in [SKILL.md](./SKILL.md):
+When you use it as an Agent Skill, just say "plan this novel with phase-fiction-skill" inside Copilot / Claude Code / Codex. The Skill gathers the premise, phase split, and hard constraints, then generates the artifact set described in [SKILL.md](./SKILL.md):
 
 ```text
 <project>/
@@ -142,12 +191,20 @@ When used as an Agent Skill, just say "plan this novel with phase-fiction-skill"
 
 Only the current phase needs a formal contract on day one. Future phases can stay as placeholder pairs until they become current.
 
+For serious long-form projects, also declare a `project_profile` in `plan/manifest.yaml` with draft targets, and add `artifact_checks` to any phase whose deliverables should be machine-gated before `complete` is allowed to write the ledger. Under delivery tiers such as `full-draft` and `serialized-arc`, `target_length_chars` and `target_chapters` should be explicit min/max ranges with positive integers, and `target_chapter_pattern` should be declared explicitly instead of relying on defaults.
+
+If you are upgrading an older generated project, do it in this order: replace `scripts/planctl`, run `ruby scripts/planctl doctor`, add `repo_policy`, add `project_profile`, then add `artifact_checks` to delivery-bearing phases. In real migrations, doctor will often also reveal drift across the three agent instruction files.
+
 ## Documentation map
 
 - [SKILL.md](./SKILL.md) - full scaffolding procedure and quality gates
 - [references/methodology.md](./references/methodology.md) - fiction-specific methodology and failure model
 - [references/glossary.md](./references/glossary.md) - glossary of story-phase terms
 - [references/templates.md](./references/templates.md) - `manifest` / `common` / `state` / `handoff` templates
+- [profiles/README.md](./profiles/README.md) - profile layer boundary and schema
+- [profiles/overlays.yaml](./profiles/overlays.yaml) - shared overlay catalog used to modify base phase graphs
+- [profiles/examples.md](./profiles/examples.md) - concrete examples of how profile + overlay selections expand into final phase graphs
+- [profiles/profile-template.yaml](./profiles/profile-template.yaml) - starter template for a new fiction profile
 - [references/phase-templates.md](./references/phase-templates.md) - phase and execution contract templates
 - [references/workflow-template.md](./references/workflow-template.md) - `plan/workflow.md` template
 - [references/agent-instructions-template.md](./references/agent-instructions-template.md) - shared template for the three Agent instruction files
@@ -155,6 +212,6 @@ Only the current phase needs a formal contract on day one. Future phases can sta
 
 ## License
 
-Shares the license of the parent Agent Skill library. `scripts/planctl.rb` has no external dependencies and can be copied out and reused standalone.
+This repo inherits the license of the parent Agent Skill library. `scripts/planctl.rb` has no external dependencies and can be copied out and reused on its own.
 
 [English](./README.md) · [中文](./README.zh-CN.md)

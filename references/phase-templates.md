@@ -125,6 +125,42 @@
 - **交付检查比完成判定更细**，用于判断这一次创作/修订是否真的完成。
 - **修订阶段必须单一主问题**：结构轮只修结构，人物轮只修人物，语言轮只修语言。
 
+### 机器可执行的交付门禁
+
+如果某个 phase 需要被 `planctl complete` 机器校验，不要只在 Markdown 里写“完成判定”，还要在 `plan/manifest.yaml` 的对应 phase 条目里补 `artifact_checks`。
+
+默认强约束：如果 `project_profile.delivery_tier` 是 `full-draft` 或 `serialized-arc`，并且这个 phase 的 `allowed_paths` 会落到 `project_profile.delivery_paths` 里，那么 `artifact_checks` 不再是可选项，而是默认必填项。
+
+示例：
+
+```yaml
+phases:
+	- id: phase-8-opening-draft-batch
+		title: Draft the opening movement
+		plan_file: plan/phases/phase-8-opening-draft-batch.md
+		execution_file: plan/execution/phase-8-opening-draft-batch.md
+		artifact_checks:
+			- type: min_chars
+				path: story/draft/part-1/chapters-01-04.md
+				min: 18000
+			- type: regex_count
+				path: story/draft/part-1/chapters-01-04.md
+				pattern: '^## '
+				min: 4
+			- type: no_placeholder_tokens
+				path: story/draft/part-1/chapters-01-04.md
+```
+
+当前 `planctl` 支持的检查类型：
+
+- `file_exists`
+- `min_chars`
+- `max_chars`
+- `regex_count`
+- `no_placeholder_tokens`
+
+写作建议：Markdown 合同继续负责告诉人“为什么这轮算完成”，`artifact_checks` 负责告诉脚本“哪些结果不满足时必须拒绝 complete”。
+
 ---
 
 ## 3. 示例：人物引擎阶段

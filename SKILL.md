@@ -33,6 +33,7 @@ argument-hint: "(optional) target project path and one-line story premise"
 1. **目标项目根目录必须是 git 工作区**。`git rev-parse --is-inside-work-tree` 必须返回 `true`。
    - Phase-Fiction 依赖 git 记录每一轮创作或修订的客观里程碑，否则 `complete` 写回的 phase 无法对应到可审计 diff。
    - 修复方式：`cd <target> && git init && git add -A && git commit -m 'baseline'`。
+   - 默认还要求目标项目根目录就是 git top-level；如果你故意把小说项目嵌在宿主仓库里，必须显式把 `repo_policy.mode` 设为 `embedded-explicit`，并避免直接落在 `main` / `master`。
 2. **本地有 `ruby` 可用**，版本 ≥ 2.6（`ruby -v` 验证）。`planctl` 是单文件 Ruby 脚本，不依赖 gem。
 3. **显式 opt-out（不推荐）**：只有在确实不能使用 git 的特殊环境下，才允许预先设置 `PHASE_CONTRACT_ALLOW_NON_GIT=1`，并在后续 `plan/common.md` 里写明偏离风险与补偿方式。
 
@@ -62,17 +63,19 @@ argument-hint: "(optional) target project path and one-line story premise"
 
 ## Core Principles
 
-| #   | 原则           | 落地动作                                                               |
-| --- | -------------- | ---------------------------------------------------------------------- |
-| P1  | 状态外部化     | premise、phase 进度、handoff 全部写回仓库文件，而不是交给 AI 记忆      |
-| P2  | 调度与执行分离 | `planctl` 决定下一步写什么，AI 只决定怎么写                            |
-| P3  | 三文件上下文律 | 当前工作窗口只装 `common + phase + execution` 三份文档                 |
-| P4  | 双层合同       | `phases/*` 定义阶段目标，`execution/*` 限定这轮可触碰路径              |
-| P5  | 依赖强制校验   | `depends_on` + `--strict` 阻止跳写、跳修、跳收尾                       |
-| P6  | 完成即写入     | `complete` 原子写回 `state.yaml` 与 `handoff.md`，未写回不算完成       |
-| P7  | 固定恢复协议   | 压缩恢复永远按 manifest → handoff → advance                            |
-| P8  | 里程碑外部化   | 每个创作 phase 完成后留下 git 级里程碑，方便回看与回退                 |
-| P9  | 显式整体收尾   | 全部 phase 完成后必须跑 `finalize`，再把是否连载 / 投稿 / 发布交还人类 |
+| #   | 原则           | 落地动作                                                                   |
+| --- | -------------- | -------------------------------------------------------------------------- |
+| P1  | 状态外部化     | premise、phase 进度、handoff 全部写回仓库文件，而不是交给 AI 记忆          |
+| P2  | 调度与执行分离 | `planctl` 决定下一步写什么，AI 只决定怎么写                                |
+| P3  | 三文件上下文律 | 当前工作窗口只装 `common + phase + execution` 三份文档                     |
+| P4  | 双层合同       | `phases/*` 定义阶段目标，`execution/*` 限定这轮可触碰路径                  |
+| P5  | 依赖强制校验   | `depends_on` + `--strict` 阻止跳写、跳修、跳收尾                           |
+| P6  | 完成即写入     | `complete` 原子写回 `state.yaml` 与 `handoff.md`，未写回不算完成           |
+| P7  | 固定恢复协议   | 压缩恢复永远按 manifest → handoff → advance                                |
+| P8  | 里程碑外部化   | 每个创作 phase 完成后留下 git 级里程碑，方便回看与回退                     |
+| P9  | 显式整体收尾   | 全部 phase 完成后必须跑 `finalize`，再把是否连载 / 投稿 / 发布交还人类     |
+| P10 | 交付门禁外部化 | 长度、章节数和 phase 级 artifact checks 由 manifest 驱动，而不是靠口头约定 |
+| P11 | 仓库隔离显式化 | 独立仓库 / worktree / 嵌入模式必须写进 `repo_policy`，默认拒绝隐式嵌套     |
 
 ## Procedure
 
@@ -92,11 +95,38 @@ argument-hint: "(optional) target project path and one-line story premise"
 1. **项目根目录路径**（绝对路径）
 2. **一句话故事承诺**：主角 + 目标 + 冲突 + 危险感
 3. **作品类型与目标长度**：长篇 / 中篇 / 系列；大致字数或卷数
-4. **切分主维度**：按卷幕、按剧情弧、按章节波次、按修订轮次、按连载批次（必须选一）
-5. **初始 phase 列表**：phase id + 一句话标题 + depends_on（建议 5–12 个）
-6. **全局硬约束**：POV、时态、文风、受众、内容边界、必须保留的设定、禁用套路、关键母题等
+4. **基础 profile**：至少在当前内置 profile 中选择 `mystery-thriller`、`romance`、`epic-fantasy`、`literary`、`horror` 或 `custom`
+5. **叙事引擎与 overlays**：例如 `clue-driven` / `relationship-driven`，再加 `closed-circle`、`dual-pov`、`countdown`、`slow-burn` 这类 overlay
+6. **仓库策略**：独立 repo / worktree / 嵌入式项目（默认独立 repo）
+7. **切分主维度**：按卷幕、按剧情弧、按章节波次、按修订轮次、按连载批次（必须选一）
+8. **phase 覆写需求**：默认不手填整套 phase；只有当用户明确要求增删 phase 或替换某个默认 phase 时，才记录成覆写项
+9. **全局硬约束**：POV、时态、文风、受众、内容边界、必须保留的设定、禁用套路、关键母题等
+
+如果目标是“长篇完成稿”而 phase 只包含几批正文与一次修订，没有任何扩写或终稿层级 phase，应视为切分不足，先在规划期重切，不要把明显偏短的结构直接交给 `finalize`。
 
 写不出客观完成判定的 phase，通常就是切错了，必须当场重切。
+
+### Step 1.5: 从 profile 派生初始 phase 图
+
+在真正生成 `plan/manifest.yaml` 之前，必须先把 `workflow_profile` 展开成一份**初始 phase 图**，而不是让用户从零手填整套 phase。
+
+固定顺序如下：
+
+1. 读取选中的 `profiles/<profile>/profile.yaml`
+2. 以其中 `defaults.phase_catalog` 作为 base phase 列表
+3. 读取 [profiles/overlays.yaml](./profiles/overlays.yaml) 中的标准 overlay 定义，只应用用户选中的 overlays
+4. 按 overlay 顺序应用 `phase_merge.operations`：当前只允许 `require_phase` 和 `ensure_phase_after`，并且必须通过 overlay 内部的 `targets` / `anchor_targets` 显式解析到当前 profile 的 phase id
+5. 最后才应用用户的 phase 覆写项；覆写项只应修改局部，不应重建整套 phase 图
+
+生成约束：
+
+- base profile 决定“这类小说通常需要哪些 phase”
+- overlays 决定“这次项目有哪些次级结构要求”
+- 用户覆写只解决项目特例，不替代 profile 层
+- 如果 `custom` profile 被选中，才允许退化为人工定义 phase 图
+- 不允许根据 phase 名称相似度去猜“等价 phase”；overlay 没有给出当前 profile 的 target map，就直接报错
+
+交付要求：生成后的 phase 列表必须写回 `plan/manifest.yaml`，不能只停留在解释层。
 
 ### Step 2: 生成骨架文件
 
@@ -111,9 +141,23 @@ argument-hint: "(optional) target project path and one-line story premise"
 
 三份 agent 指令必须字节一致，统一复制 [references/agent-instructions-template.md](./references/agent-instructions-template.md) 并替换 `<PROJECT>`。
 
+同时在 manifest 里写入：
+
+- `workflow_profile`：基础 profile、叙事引擎与 overlays
+- `phases`：先从 profile 展开的 phase 图，再叠加用户覆写后的最终结果
+- `project_profile`：目标长度、章节数、交付层级、delivery paths
+- `repo_policy`：默认 `standalone`
+- 对当前 phase 必须满足的 `artifact_checks`
+
+profile 选择规则：核心 workflow（`planctl`、双层合同、handoff、ledger）保持不变；会随小说类型变化的，只能通过 `workflow_profile` 和 `profiles/*/profile.yaml` 改默认 phase 图、产物、补充问卷与修订轮次，不能为每个题材复制一套调度器。
+
+规则补充：当 `delivery_tier` 是 `full-draft` 或 `serialized-arc` 时，凡是会写入 `delivery_paths` 的 phase，默认都要带 `artifact_checks`。如果缺失，`complete` 会直接拒绝落账本。
+
+结构补充：当 `delivery_tier` 是 `full-draft` 或 `serialized-arc` 时，`project_profile.target_length_chars` 和 `project_profile.target_chapters` 不只是“要有”，还必须写成完整的 `min/max` 正整数区间；`target_chapter_pattern` 也必须显式声明，避免把默认正则误当成项目约束。
+
 ### Step 3: 安装 planctl
 
-把 [scripts/planctl.rb](./scripts/planctl.rb) 复制到目标项目的 `scripts/planctl`，并加可执行位：`chmod +x scripts/planctl`。随后至少跑一次：
+把 [scripts/planctl.rb](./scripts/planctl.rb) 复制到目标项目的 `scripts/planctl`，并加可执行位：`chmod +x scripts/planctl`。注意：本仓库不再额外保留 `scripts/planctl` 入口文件，真正需要分发和维护的只有 `scripts/planctl.rb` 这份实现；落到生成项目时，文件名仍然应保持为 `scripts/planctl`。随后至少跑一次：
 
 ```bash
 ruby scripts/planctl status
@@ -122,6 +166,7 @@ ruby scripts/planctl doctor
 
 ### Step 4: 生成第一批 phase 合同
 
+- 先根据 `workflow_profile` 的 profile + overlays 生成最终 phase 列表，再落 `plan/phases/*` 和 `plan/execution/*`
 - 为 `phase-0` 和准备立刻启动的 phase 生成**正式合同**
 - 为其余 future phase 生成带 `PHASE_CONTRACT_PLACEHOLDER` 的**成对占位合同**
 
@@ -131,7 +176,9 @@ ruby scripts/planctl doctor
 
 - 完成判定禁止使用“更精彩”“更抓人”“更立体”之类主观词
 - execution 的“允许改动”必须是路径级白名单
+- 对需要机器拒绝的交付条件，在 manifest phase 条目里补 `artifact_checks`
 - 世界观整理、正文起草、结构修订、语言润色，尽量不要塞进同一个 phase
+- 如果 profile 自带修订轮次或必带制品，phase 合同里必须显式落盘，不能只在 profile.yaml 里提到却不写进项目文件
 
 ### Step 5: 启动并验证
 
@@ -146,6 +193,7 @@ ruby scripts/planctl advance --strict
 1. 返回 `ACTION: implement`
 2. `required_context` 恰好三份：`common.md` + 当前 phase + 当前 execution
 3. `plan/handoff.md` 已写出压缩恢复顺序和下一步指引
+4. 若配置了 `project_profile` / `repo_policy`，`ruby scripts/planctl doctor` 不应报 top-level mismatch 或明显的 delivery gate 问题
 
 ### Step 6: 输出使用指南
 
@@ -162,6 +210,21 @@ ruby scripts/planctl finalize
 - `ACTION: promote_placeholder` 不是用户确认点，而是先补正式合同再继续
 - 压缩或新会话恢复优先用 `ruby scripts/planctl resume --strict`
 - `ruby scripts/planctl doctor` 用于检查三份 agent 指令、manifest 引用和 state/handoff 一致性
+- `ruby scripts/planctl finalize` 现在还会检查 delivery gate：workflow 完成不等于目标交付层级达标
+
+### Step 6.5: 升级既有项目到新 schema
+
+如果目标项目是用旧版本 Skill 生成的，建议按下面的顺序升级，而不是一次性手改所有文件：
+
+1. 先把最新的 [scripts/planctl.rb](./scripts/planctl.rb) 覆盖到项目里的 `scripts/planctl`。
+2. 运行 `ruby scripts/planctl doctor`，先看迁移提示，不要急着补正文。
+3. 若 manifest 缺 `repo_policy`，先补 `repo_policy.mode`：通常是 `standalone`；只有明确嵌在宿主仓库里时才用 `embedded-explicit`。
+4. 若 manifest 缺 `project_profile`，补 `delivery_tier`、`delivery_paths`、`target_length_chars`、`target_chapters`。
+5. 对所有会写入 `delivery_paths` 的 phase，补 `artifact_checks`。
+6. 再跑一次 `ruby scripts/planctl doctor`，直到只剩可接受 warning。
+7. 最后再继续新的 phase 或重新跑 `finalize`。
+
+真实迁移时还要顺手检查 `.github/copilot-instructions.md`、`CLAUDE.md`、`AGENTS.md` 是否仍然字节一致；旧项目很容易在后续手改中把这三份文件改散。
 
 ### Step 7: 里程碑提交与推送（`complete` 自动执行）
 
@@ -196,6 +259,8 @@ ruby scripts/planctl finalize
 
 **已有散乱提纲或半成稿，但没有 planctl 体系**：直接生成基础设施，把现有资料纳入 manifest 与 common 约束。
 
+**已有旧版 phase-fiction 项目，需要接入新 gate**：先升级 `scripts/planctl`，跑 `doctor` 看迁移提示，再按 `repo_policy` → `project_profile` → `artifact_checks` 的顺序补 schema；不要先补 artifact_checks 再回头定义 delivery tier。
+
 **某个 phase 做坏了需要回退**：运行 `ruby scripts/planctl revert <phase-id>`，并按依赖逆序回退。
 
 **最后一个 phase 已完成**：不要直接宣告项目结束，必须先跑 `finalize`。
@@ -203,11 +268,14 @@ ruby scripts/planctl finalize
 ## Quality Gates
 
 - [ ] 目标项目根目录是 git 工作区，或已显式设置 `PHASE_CONTRACT_ALLOW_NON_GIT=1` 且 `plan/common.md` 含偏离风险段
+- [ ] 默认 `repo_policy.mode=standalone`，且项目根目录与 git top-level 一致；若不是，必须显式改为 `embedded-explicit`
 - [ ] `manifest.yaml` 的 `phases[].required_context` 恰好三项
+- [ ] `manifest.yaml` 已声明 `project_profile`，其目标长度 / 章节数与项目定位一致
 - [ ] `manifest.yaml` 的 `compression_control.rules` 明确禁止一次性加载全部 phase 文档
 - [ ] `common.md` 只写长期稳定约束，不混入具体实施步骤
 - [ ] `phases/phase-0-*.md` 的完成判定全部可客观勾选
 - [ ] `execution/phase-0-*.md` 的允许改动是路径白名单
+- [ ] 需要机器兜底的 phase 已配置 `artifact_checks`
 - [ ] 当前 phase 使用正式合同，future phase 使用带 `PHASE_CONTRACT_PLACEHOLDER` 的成对占位合同
 - [ ] `.github/copilot-instructions.md`、`CLAUDE.md`、`AGENTS.md` 三份内容完全一致
 - [ ] `ruby scripts/planctl status`、`doctor`、`advance --strict` 能跑通
