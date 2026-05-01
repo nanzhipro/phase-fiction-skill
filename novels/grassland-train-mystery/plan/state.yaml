@@ -11,6 +11,7 @@ completed_phases:
 - phase-7-endgame-matrix
 - phase-8-opening-draft-batch
 - phase-9-middle-draft-batch
+- phase-10-endgame-draft-batch
 completion_log:
 - phase_id: phase-0-premise-promise
   completed_at: '2026-05-01T02:51:27Z'
@@ -76,5 +77,11 @@ completion_log:
     Han Songyuan's reversal, and the exposure of Aruna as the living witness.
   next_focus: Promote phase-10 into a formal contract and draft the endgame in full
     prose from the signal-gap hunt through the terminal showdown and aftermath.
-updated_at: '2026-05-01T03:07:18Z'
+- phase_id: phase-10-endgame-draft-batch
+  completed_at: '2026-05-01T03:09:22Z'
+  summary: Drafted the endgame prose from the signal-gap hunt through the broadcast
+    gambit, terminal showdown, witness testimony, and the aftershock at Wulesu Station.
+  next_focus: Promote phase-11 into a formal contract and run a structural suspense
+    revision pass across the full manuscript and supporting tension artifacts.
+updated_at: '2026-05-01T03:09:22Z'
 finalized_at: 
