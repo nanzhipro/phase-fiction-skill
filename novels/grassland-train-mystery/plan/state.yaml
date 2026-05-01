@@ -9,6 +9,7 @@ completed_phases:
 - phase-5-opening-matrix
 - phase-6-middle-matrix
 - phase-7-endgame-matrix
+- phase-8-opening-draft-batch
 completion_log:
 - phase_id: phase-0-premise-promise
   completed_at: '2026-05-01T02:51:27Z'
@@ -61,5 +62,12 @@ completion_log:
     aftershock.
   next_focus: Promote phase-8 into a formal contract and draft the opening movement
     in full prose from boarding through the first suspect net.
-updated_at: '2026-05-01T03:03:00Z'
+- phase_id: phase-8-opening-draft-batch
+  completed_at: '2026-05-01T03:05:16Z'
+  summary: Drafted the opening prose from boarding through the first suspect net,
+    including the aborted handoff, the windcut murder, and the reveal of the crossed-out
+    children's surnames.
+  next_focus: Promote phase-9 into a formal contract and draft the middle movement
+    in full prose from clue lock-in through witness exposure.
+updated_at: '2026-05-01T03:05:16Z'
 finalized_at: 
