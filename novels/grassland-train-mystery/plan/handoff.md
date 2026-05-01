@@ -6,24 +6,27 @@
 
 - State file: `plan/state.yaml`
 - Handoff file: `plan/handoff.md`
-- Updated at: `2026-05-01T02:51:27Z`
-- Completed phases: `phase-0-premise-promise`
+- Updated at: `2026-05-01T02:54:00Z`
+- Completed phases: `phase-0-premise-promise, phase-1-cast-engine`
 
 ## 最近完成
 
 - `phase-0-premise-promise` Lock the steppe-train suspense promise: Locked the story promise, failure stakes, hidden-old-case anchor, and reader-facing suspense contract for the steppe train novel.
 - next focus: Build the suspect cast, motive lattice, and relationship pressure around Lin Yan and the key passengers.
+- `phase-1-cast-engine` Build the suspect cast and relationship engine: Built the passenger cast engine with nine motive-driven character files and a relationship map covering suspicion, leverage, and future rupture points.
+- next focus: Promote phase-2 into a formal contract and lock the hidden-truth lattice, clue ledger, and unified old-case timeline.
 
 ## 下一 Phase
 
-- `phase-1-cast-engine` Build the suspect cast and relationship engine
-- plan: `plan/phases/phase-1-cast-engine.md`
-- execution: `plan/execution/phase-1-cast-engine.md`
+- `phase-2-truth-lattice` Establish the hidden truth and clue lattice
+- plan: `plan/phases/phase-2-truth-lattice.md`
+- execution: `plan/execution/phase-2-truth-lattice.md`
+- status: `placeholder contracts need upgrade first (plan/phases/phase-2-truth-lattice.md, plan/execution/phase-2-truth-lattice.md)`
 
 下一步读取顺序：
 1. `plan/common.md`
-2. `plan/phases/phase-1-cast-engine.md`
-3. `plan/execution/phase-1-cast-engine.md`
+2. `plan/phases/phase-2-truth-lattice.md`
+3. `plan/execution/phase-2-truth-lattice.md`
 
 ## 压缩恢复顺序
 

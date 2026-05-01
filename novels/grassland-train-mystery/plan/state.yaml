@@ -2,6 +2,7 @@
 version: 1
 completed_phases:
 - phase-0-premise-promise
+- phase-1-cast-engine
 completion_log:
 - phase_id: phase-0-premise-promise
   completed_at: '2026-05-01T02:51:27Z'
@@ -9,5 +10,11 @@ completion_log:
     suspense contract for the steppe train novel.
   next_focus: Build the suspect cast, motive lattice, and relationship pressure around
     Lin Yan and the key passengers.
-updated_at: '2026-05-01T02:51:27Z'
+- phase_id: phase-1-cast-engine
+  completed_at: '2026-05-01T02:54:00Z'
+  summary: Built the passenger cast engine with nine motive-driven character files
+    and a relationship map covering suspicion, leverage, and future rupture points.
+  next_focus: Promote phase-2 into a formal contract and lock the hidden-truth lattice,
+    clue ledger, and unified old-case timeline.
+updated_at: '2026-05-01T02:54:00Z'
 finalized_at: 
