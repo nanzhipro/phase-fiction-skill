@@ -4,6 +4,7 @@ completed_phases:
 - phase-0-premise-promise
 - phase-1-cast-engine
 - phase-2-truth-lattice
+- phase-3-route-pressure
 completion_log:
 - phase_id: phase-0-premise-promise
   completed_at: '2026-05-01T02:51:27Z'
@@ -23,5 +24,12 @@ completion_log:
     purpose, the leverage chain, a 14-item clue ledger, and a 31-node unified timeline.'
   next_focus: Promote phase-3 into a formal contract and design the train route, compartment
     logic, station pressure, and movement constraints around the countdown.
-updated_at: '2026-05-01T02:56:41Z'
+- phase_id: phase-3-route-pressure
+  completed_at: '2026-05-01T02:58:04Z'
+  summary: Turned the train into a pressure system with route hotspots, compartment
+    control nodes, and a countdown timeline tied to stations, signal gaps, and the
+    approach to the terminal.
+  next_focus: Promote phase-4 into a formal contract and map the macro suspense arc,
+    reversals, and pressure-wave pattern across the whole novel.
+updated_at: '2026-05-01T02:58:04Z'
 finalized_at: 

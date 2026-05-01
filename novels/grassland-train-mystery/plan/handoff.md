@@ -6,29 +6,29 @@
 
 - State file: `plan/state.yaml`
 - Handoff file: `plan/handoff.md`
-- Updated at: `2026-05-01T02:56:41Z`
-- Completed phases: `phase-0-premise-promise, phase-1-cast-engine, phase-2-truth-lattice`
+- Updated at: `2026-05-01T02:58:04Z`
+- Completed phases: `phase-0-premise-promise, phase-1-cast-engine, phase-2-truth-lattice, phase-3-route-pressure`
 
 ## 最近完成
 
-- `phase-0-premise-promise` Lock the steppe-train suspense promise: Locked the story promise, failure stakes, hidden-old-case anchor, and reader-facing suspense contract for the steppe train novel.
-- next focus: Build the suspect cast, motive lattice, and relationship pressure around Lin Yan and the key passengers.
 - `phase-1-cast-engine` Build the suspect cast and relationship engine: Built the passenger cast engine with nine motive-driven character files and a relationship map covering suspicion, leverage, and future rupture points.
 - next focus: Promote phase-2 into a formal contract and lock the hidden-truth lattice, clue ledger, and unified old-case timeline.
 - `phase-2-truth-lattice` Establish the hidden truth and clue lattice: Locked the hidden truth: the old child-transfer crime, the on-train murder purpose, the leverage chain, a 14-item clue ledger, and a 31-node unified timeline.
 - next focus: Promote phase-3 into a formal contract and design the train route, compartment logic, station pressure, and movement constraints around the countdown.
+- `phase-3-route-pressure` Design the route logic and countdown pressure: Turned the train into a pressure system with route hotspots, compartment control nodes, and a countdown timeline tied to stations, signal gaps, and the approach to the terminal.
+- next focus: Promote phase-4 into a formal contract and map the macro suspense arc, reversals, and pressure-wave pattern across the whole novel.
 
 ## 下一 Phase
 
-- `phase-3-route-pressure` Design the route logic and countdown pressure
-- plan: `plan/phases/phase-3-route-pressure.md`
-- execution: `plan/execution/phase-3-route-pressure.md`
-- status: `placeholder contracts need upgrade first (plan/phases/phase-3-route-pressure.md, plan/execution/phase-3-route-pressure.md)`
+- `phase-4-arc-wave-design` Map the macro arc and suspense waves
+- plan: `plan/phases/phase-4-arc-wave-design.md`
+- execution: `plan/execution/phase-4-arc-wave-design.md`
+- status: `placeholder contracts need upgrade first (plan/phases/phase-4-arc-wave-design.md, plan/execution/phase-4-arc-wave-design.md)`
 
 下一步读取顺序：
 1. `plan/common.md`
-2. `plan/phases/phase-3-route-pressure.md`
-3. `plan/execution/phase-3-route-pressure.md`
+2. `plan/phases/phase-4-arc-wave-design.md`
+3. `plan/execution/phase-4-arc-wave-design.md`
 
 ## 压缩恢复顺序
 
