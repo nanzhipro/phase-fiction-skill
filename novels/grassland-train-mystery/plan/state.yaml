@@ -7,6 +7,7 @@ completed_phases:
 - phase-3-route-pressure
 - phase-4-arc-wave-design
 - phase-5-opening-matrix
+- phase-6-middle-matrix
 completion_log:
 - phase_id: phase-0-premise-promise
   completed_at: '2026-05-01T02:51:27Z'
@@ -46,5 +47,11 @@ completion_log:
     net.
   next_focus: Promote phase-6 into a formal contract and map the middle-movement trap
     scenes, false solve, and midpoint flip into concrete scene cards.
-updated_at: '2026-05-01T03:00:41Z'
+- phase_id: phase-6-middle-matrix
+  completed_at: '2026-05-01T03:01:46Z'
+  summary: Broke the middle movement into six trap scenes covering the old-case lock-in,
+    the false solve, Han Songyuan's reversal, and the exposure of the living witness.
+  next_focus: Promote phase-7 into a formal contract and map the endgame pursuit,
+    false handoff, terminal showdown, and aftermath into final scene cards.
+updated_at: '2026-05-01T03:01:46Z'
 finalized_at: 
