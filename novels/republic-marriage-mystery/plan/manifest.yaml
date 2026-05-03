@@ -1,0 +1,245 @@
+version: 1
+kind: republic-marriage-mystery-fiction-plan-manifest
+project: republic-marriage-mystery
+entrypoints:
+  overview: README.md
+  story_readme: story/README.md
+  common: plan/common.md
+  workflow: plan/workflow.md
+  handoff: plan/handoff.md
+workflow_profile:
+  profile: mystery-thriller
+  engine: clue-driven
+  overlays:
+    - closed-circle
+    - countdown
+    - single-pov
+project_profile:
+  form: longform-novel
+  delivery_tier: revision-pass
+  delivery_paths: []
+repo_policy:
+  mode: embedded-explicit
+  protected_branches:
+    - release-only
+execution_rule:
+  description: >-
+    执行任一创作阶段时，必须同时携带完整通用上下文、当前阶段定位合同与当前执行合同。
+    execution 文档负责声明这次写作或修订的输入、边界、交付物和完成标准。
+  resolver: scripts/planctl
+  state_file: plan/state.yaml
+  handoff_file: plan/handoff.md
+  repo_instructions:
+    - .github/copilot-instructions.md
+    - CLAUDE.md
+    - AGENTS.md
+  continuous_execution:
+    next_command: ruby scripts/planctl advance --strict
+    completion_command: >-
+      ruby scripts/planctl complete <phase-id> --summary "<summary>" --next-focus "<next-focus>" --continue
+  continuation:
+    mode: autonomous
+    stop_only_on:
+      - dependency_missing
+      - missing_context
+      - required_gate_failed
+      - git_conflict
+      - destructive_operation_required
+      - all_phases_completed
+    non_stop_actions:
+      - phase_completed
+      - next_phase_ready
+      - placeholder_contract_promotion
+      - optional_check_failed
+      - no_remote_configured
+  enforcement:
+    dependency_check: true
+    stop_on_missing_context: true
+    require_execution_file: true
+  enforce_allowed_paths: false
+  compression_control:
+    enabled: true
+    max_completion_history: 3
+    resume_read_order:
+      - plan/manifest.yaml
+      - plan/handoff.md
+      - next.phase.required_context
+    rules:
+      - 永远不要一次性加载所有 phase 文档。
+      - 只在当前 phase 读取 plan/common.md、当前 phase plan 和当前 phase execution。
+      - 每完成一个 phase 后更新 handoff，再进入下一 phase。
+  read_order:
+    - plan/common.md
+    - phase.plan_file
+    - phase.execution_file
+  required_context:
+    - plan/common.md
+phases:
+  - id: phase-0-premise-promise
+    title: Lock the marriage trap, case promise, and failure stakes
+    plan_file: plan/phases/phase-0-premise-promise.md
+    execution_file: plan/execution/phase-0-premise-promise.md
+    required_context:
+      - plan/common.md
+      - plan/phases/phase-0-premise-promise.md
+      - plan/execution/phase-0-premise-promise.md
+    depends_on: []
+    artifact_checks:
+      - type: file_exists
+        path: story/premise.md
+      - type: min_chars
+        path: story/premise.md
+        min: 1800
+      - type: no_placeholder_tokens
+        path: story/premise.md
+    allowed_paths:
+      - story/premise.md
+  - id: phase-1-cast-engine
+    title: Build the household suspect web and marriage engine
+    plan_file: plan/phases/phase-1-cast-engine.md
+    execution_file: plan/execution/phase-1-cast-engine.md
+    required_context:
+      - plan/common.md
+      - plan/phases/phase-1-cast-engine.md
+      - plan/execution/phase-1-cast-engine.md
+    depends_on:
+      - phase-0-premise-promise
+    allowed_paths:
+      - story/cast/**
+      - story/canon/relationships.md
+      - story/canon/suspect-web.md
+  - id: phase-2-truth-lattice
+    title: Fix the old-case lattice, dowry trap, and clue fairness
+    plan_file: plan/phases/phase-2-truth-lattice.md
+    execution_file: plan/execution/phase-2-truth-lattice.md
+    required_context:
+      - plan/common.md
+      - plan/phases/phase-2-truth-lattice.md
+      - plan/execution/phase-2-truth-lattice.md
+    depends_on:
+      - phase-1-cast-engine
+    allowed_paths:
+      - story/canon/case-file.md
+      - story/canon/clue-ledger.md
+      - story/canon/timeline.md
+  - id: phase-3-pressure-system
+    title: Design the closed courtyard, return-home countdown, and social siege
+    plan_file: plan/phases/phase-3-pressure-system.md
+    execution_file: plan/execution/phase-3-pressure-system.md
+    required_context:
+      - plan/common.md
+      - plan/phases/phase-3-pressure-system.md
+      - plan/execution/phase-3-pressure-system.md
+    depends_on:
+      - phase-2-truth-lattice
+    allowed_paths:
+      - story/canon/closed-circle-rules.md
+      - story/canon/countdown-clock.md
+      - story/outline/pressure-map.md
+  - id: phase-4-arc-wave-design
+    title: Map the false husband suspicion, midpoint turn, and public reckoning
+    plan_file: plan/phases/phase-4-arc-wave-design.md
+    execution_file: plan/execution/phase-4-arc-wave-design.md
+    required_context:
+      - plan/common.md
+      - plan/phases/phase-4-arc-wave-design.md
+      - plan/execution/phase-4-arc-wave-design.md
+    depends_on:
+      - phase-3-pressure-system
+    allowed_paths:
+      - story/outline/tension-waves.md
+      - story/outline/arc-map.md
+      - story/outline/reveal-beats.md
+  - id: phase-5-opening-draft-batch
+    title: Draft part 1 marriage arrival, maid disappearance, and first burial hook
+    plan_file: plan/phases/phase-5-opening-draft-batch.md
+    execution_file: plan/execution/phase-5-opening-draft-batch.md
+    required_context:
+      - plan/common.md
+      - plan/phases/phase-5-opening-draft-batch.md
+      - plan/execution/phase-5-opening-draft-batch.md
+    depends_on:
+      - phase-4-arc-wave-design
+    artifact_checks:
+      - type: file_exists
+        path: story/draft/part-1/chapters-01-08.md
+      - type: min_chars
+        path: story/draft/part-1/chapters-01-08.md
+        min: 8000
+      - type: regex_count
+        path: story/draft/part-1/chapters-01-08.md
+        pattern: "^## "
+        min: 8
+      - type: no_placeholder_tokens
+        path: story/draft/part-1/chapters-01-08.md
+    allowed_paths:
+      - story/draft/part-1/**
+  - id: phase-6-midgame-draft-batch
+    title: Draft part 2 false solution, hidden marriage motive, and second killing wave
+    plan_file: plan/phases/phase-6-midgame-draft-batch.md
+    execution_file: plan/execution/phase-6-midgame-draft-batch.md
+    required_context:
+      - plan/common.md
+      - plan/phases/phase-6-midgame-draft-batch.md
+      - plan/execution/phase-6-midgame-draft-batch.md
+    depends_on:
+      - phase-5-opening-draft-batch
+    artifact_checks:
+      - type: file_exists
+        path: story/draft/part-2/chapters-09-16.md
+      - type: min_chars
+        path: story/draft/part-2/chapters-09-16.md
+        min: 8000
+      - type: regex_count
+        path: story/draft/part-2/chapters-09-16.md
+        pattern: "^## "
+        min: 8
+      - type: no_placeholder_tokens
+        path: story/draft/part-2/chapters-09-16.md
+    allowed_paths:
+      - story/draft/part-2/**
+  - id: phase-7-endgame-draft-batch
+    title: Draft part 3 return-home banquet, ledger reveal, and final reversal
+    plan_file: plan/phases/phase-7-endgame-draft-batch.md
+    execution_file: plan/execution/phase-7-endgame-draft-batch.md
+    required_context:
+      - plan/common.md
+      - plan/phases/phase-7-endgame-draft-batch.md
+      - plan/execution/phase-7-endgame-draft-batch.md
+    depends_on:
+      - phase-6-midgame-draft-batch
+    artifact_checks:
+      - type: file_exists
+        path: story/draft/part-3/chapters-17-24.md
+      - type: min_chars
+        path: story/draft/part-3/chapters-17-24.md
+        min: 8000
+      - type: regex_count
+        path: story/draft/part-3/chapters-17-24.md
+        pattern: "^## "
+        min: 8
+      - type: no_placeholder_tokens
+        path: story/draft/part-3/chapters-17-24.md
+    allowed_paths:
+      - story/draft/part-3/**
+  - id: phase-8-suspense-revision-pass
+    title: Tighten clue fairness, chapter hooks, and reveal compression
+    plan_file: plan/phases/phase-8-suspense-revision-pass.md
+    execution_file: plan/execution/phase-8-suspense-revision-pass.md
+    required_context:
+      - plan/common.md
+      - plan/phases/phase-8-suspense-revision-pass.md
+      - plan/execution/phase-8-suspense-revision-pass.md
+    depends_on:
+      - phase-7-endgame-draft-batch
+    artifact_checks:
+      - type: file_exists
+        path: story/revision/structural-suspense-ledger.md
+      - type: min_chars
+        path: story/revision/structural-suspense-ledger.md
+        min: 2000
+      - type: no_placeholder_tokens
+        path: story/revision/structural-suspense-ledger.md
+    allowed_paths:
+      - story/revision/**
+      - story/draft/**

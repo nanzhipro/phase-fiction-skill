@@ -1,0 +1,281 @@
+---
+version: 1
+completed_phases:
+- phase-0-premise-promise
+- phase-1-cast-engine
+- phase-2-truth-lattice
+- phase-3-pressure-system
+- phase-4-arc-wave-design
+- phase-5-opening-draft-batch
+- phase-6-midgame-draft-batch
+- phase-7-endgame-draft-batch
+- phase-8-suspense-revision-pass
+completion_log:
+- phase_id: phase-0-premise-promise
+  completed_at: '2026-05-02T13:37:20Z'
+  summary: Locked the story promise, marriage trap, old-case shape, and seven-day
+    return-home stakes in story/premise.md.
+  next_focus: Promote phase-1 to formal contracts and build the household suspect
+    web around Pei Jianyue, Lu Ziheng, and the Pei family.
+  evidence:
+    artifact_checks:
+    - type: file_exists
+      path: story/premise.md
+      label: 'file_exists: story/premise.md'
+      passed: true
+      expected: file exists
+      actual: file exists
+      message: file exists
+    - type: min_chars
+      path: story/premise.md
+      label: 'min_chars: story/premise.md'
+      passed: true
+      expected:
+        min: 1800
+      actual: 4183
+      message: 4183 chars >= 1800
+    - type: no_placeholder_tokens
+      path: story/premise.md
+      label: 'no_placeholder_tokens: story/premise.md'
+      passed: true
+      expected:
+        tokens_absent:
+        - PHASE_CONTRACT_PLACEHOLDER
+        - TODO
+        - FIXME
+        - 待补
+        - 占位
+      actual:
+        found: []
+      message: no placeholder tokens found
+    file_snapshots:
+    - path: story/premise.md
+      sha256: c6d819eee564284701457445f603f954c5147e290a0537ae6ed7f06e5759b074
+      chars: 4183
+      lines: 72
+- phase_id: phase-1-cast-engine
+  completed_at: '2026-05-02T13:41:29Z'
+  summary: Built seven core cast dossiers plus relationship and suspect-web docs to
+    anchor the marriage engine and current-case suspicion lattice.
+  next_focus: Promote phase-2 to formal contracts and lock the old-case truth lattice,
+    clue ledger, and timeline.
+- phase_id: phase-2-truth-lattice
+  completed_at: '2026-05-02T13:45:01Z'
+  summary: Locked the old-case truth, current murder mechanics, clue ledger, and cross-generational
+    timeline in the canon layer.
+  next_focus: Promote phase-3 to formal contracts and define the closed-circle rules,
+    return-home countdown, and social pressure map.
+- phase_id: phase-3-pressure-system
+  completed_at: '2026-05-02T13:47:16Z'
+  summary: Defined the closed-circle rules, seven-day countdown, and layered pressure
+    map that keep the marriage mystery under constant social and procedural siege.
+  next_focus: Promote phase-4 to formal contracts and map the false husband suspicion,
+    midpoint turn, and public-reckoning reveal waves.
+- phase_id: phase-4-arc-wave-design
+  completed_at: '2026-05-02T13:49:57Z'
+  summary: Mapped the 24-chapter arc, reveal beats, and tension waves that drive the
+    marriage trap, midpoint flip, and return-home showdown.
+  next_focus: Promote phase-5 to formal contracts and draft the opening batch covering
+    the wedding arrival, abnormal trunk, maid disappearance, and box-body reveal.
+- phase_id: phase-5-opening-draft-batch
+  completed_at: '2026-05-02T13:55:16Z'
+  summary: Drafted the opening 8 chapters covering the wedding arrival, abnormal trunk,
+    A-Jiang's disappearance, the box-body reveal, Pei Jingxiu's death notice, and
+    Lu Ziheng's pre-wedding meeting twist.
+  next_focus: Promote phase-6 to formal contracts and draft the midgame batch around
+    the false solution, the old-case proof chain, and the second killing wave.
+  evidence:
+    artifact_checks:
+    - type: file_exists
+      path: story/draft/part-1/chapters-01-08.md
+      label: 'file_exists: story/draft/part-1/chapters-01-08.md'
+      passed: true
+      expected: file exists
+      actual: file exists
+      message: file exists
+    - type: min_chars
+      path: story/draft/part-1/chapters-01-08.md
+      label: 'min_chars: story/draft/part-1/chapters-01-08.md'
+      passed: true
+      expected:
+        min: 8000
+      actual: 8438
+      message: 8438 chars >= 8000
+    - type: regex_count
+      path: story/draft/part-1/chapters-01-08.md
+      label: 'regex_count: story/draft/part-1/chapters-01-08.md'
+      passed: true
+      expected:
+        pattern: "^## "
+        min: 8
+      actual: 8
+      message: regex count=8
+    - type: no_placeholder_tokens
+      path: story/draft/part-1/chapters-01-08.md
+      label: 'no_placeholder_tokens: story/draft/part-1/chapters-01-08.md'
+      passed: true
+      expected:
+        tokens_absent:
+        - PHASE_CONTRACT_PLACEHOLDER
+        - TODO
+        - FIXME
+        - 待补
+        - 占位
+      actual:
+        found: []
+      message: no placeholder tokens found
+    file_snapshots:
+    - path: story/draft/part-1/chapters-01-08.md
+      sha256: a0cd58555559a851427abbed47801ed0ced14a7efa476a271646ae95ed024282
+      chars: 8438
+      lines: 369
+- phase_id: phase-6-midgame-draft-batch
+  completed_at: '2026-05-02T14:03:00Z'
+  summary: Drafted chapters 9-16 covering Yan Shaotang's entry, the Su Wenping false-solution
+    layer, the midpoint marriage flip, and Zhou Momo's emergence as the likely execution
+    killer.
+  next_focus: Promote phase-7 to formal contracts and draft the endgame batch around
+    the return-home banquet, public evidence chain, and final reversal.
+  evidence:
+    artifact_checks:
+    - type: file_exists
+      path: story/draft/part-2/chapters-09-16.md
+      label: 'file_exists: story/draft/part-2/chapters-09-16.md'
+      passed: true
+      expected: file exists
+      actual: file exists
+      message: file exists
+    - type: min_chars
+      path: story/draft/part-2/chapters-09-16.md
+      label: 'min_chars: story/draft/part-2/chapters-09-16.md'
+      passed: true
+      expected:
+        min: 8000
+      actual: 8003
+      message: 8003 chars >= 8000
+    - type: regex_count
+      path: story/draft/part-2/chapters-09-16.md
+      label: 'regex_count: story/draft/part-2/chapters-09-16.md'
+      passed: true
+      expected:
+        pattern: "^## "
+        min: 8
+      actual: 8
+      message: regex count=8
+    - type: no_placeholder_tokens
+      path: story/draft/part-2/chapters-09-16.md
+      label: 'no_placeholder_tokens: story/draft/part-2/chapters-09-16.md'
+      passed: true
+      expected:
+        tokens_absent:
+        - PHASE_CONTRACT_PLACEHOLDER
+        - TODO
+        - FIXME
+        - 待补
+        - 占位
+      actual:
+        found: []
+      message: no placeholder tokens found
+    file_snapshots:
+    - path: story/draft/part-2/chapters-09-16.md
+      sha256: 004d603ca10d54e5184135df14d6e5871a7351074aa600c2168354f950f8dacf
+      chars: 8003
+      lines: 343
+- phase_id: phase-7-endgame-draft-batch
+  completed_at: '2026-05-02T14:09:27Z'
+  summary: Drafted chapters 17-24 covering the return-home decision, the mansion return,
+    the final fire counterattack, the public banquet reversal, and Pei Jianyue's choice
+    to publish the dead girls' names.
+  next_focus: Promote phase-8 to formal contracts and write the structural suspense
+    revision ledger that checks hook continuity, clue fairness, and responsibility-layer
+    separation across the full novel.
+  evidence:
+    artifact_checks:
+    - type: file_exists
+      path: story/draft/part-3/chapters-17-24.md
+      label: 'file_exists: story/draft/part-3/chapters-17-24.md'
+      passed: true
+      expected: file exists
+      actual: file exists
+      message: file exists
+    - type: min_chars
+      path: story/draft/part-3/chapters-17-24.md
+      label: 'min_chars: story/draft/part-3/chapters-17-24.md'
+      passed: true
+      expected:
+        min: 8000
+      actual: 8110
+      message: 8110 chars >= 8000
+    - type: regex_count
+      path: story/draft/part-3/chapters-17-24.md
+      label: 'regex_count: story/draft/part-3/chapters-17-24.md'
+      passed: true
+      expected:
+        pattern: "^## "
+        min: 8
+      actual: 8
+      message: regex count=8
+    - type: no_placeholder_tokens
+      path: story/draft/part-3/chapters-17-24.md
+      label: 'no_placeholder_tokens: story/draft/part-3/chapters-17-24.md'
+      passed: true
+      expected:
+        tokens_absent:
+        - PHASE_CONTRACT_PLACEHOLDER
+        - TODO
+        - FIXME
+        - 待补
+        - 占位
+      actual:
+        found: []
+      message: no placeholder tokens found
+    file_snapshots:
+    - path: story/draft/part-3/chapters-17-24.md
+      sha256: bb7f4c44fad50f2a0e71663d0df7d8470dc96169ee3c4fabea51d3c1a5c43b10
+      chars: 8110
+      lines: 321
+- phase_id: phase-8-suspense-revision-pass
+  completed_at: '2026-05-02T14:15:20Z'
+  summary: Wrote the structural suspense ledger, audited all 24 chapters for hook
+    continuity and clue fairness, and applied one minimal fairness fix to publicly
+    close the planted blue-thread false clue.
+  next_focus: Run finalize, verify the full phase ledger against the repository state,
+    and prepare the final execution dashboard for the completed novel project.
+  evidence:
+    artifact_checks:
+    - type: file_exists
+      path: story/revision/structural-suspense-ledger.md
+      label: 'file_exists: story/revision/structural-suspense-ledger.md'
+      passed: true
+      expected: file exists
+      actual: file exists
+      message: file exists
+    - type: min_chars
+      path: story/revision/structural-suspense-ledger.md
+      label: 'min_chars: story/revision/structural-suspense-ledger.md'
+      passed: true
+      expected:
+        min: 2000
+      actual: 4657
+      message: 4657 chars >= 2000
+    - type: no_placeholder_tokens
+      path: story/revision/structural-suspense-ledger.md
+      label: 'no_placeholder_tokens: story/revision/structural-suspense-ledger.md'
+      passed: true
+      expected:
+        tokens_absent:
+        - PHASE_CONTRACT_PLACEHOLDER
+        - TODO
+        - FIXME
+        - 待补
+        - 占位
+      actual:
+        found: []
+      message: no placeholder tokens found
+    file_snapshots:
+    - path: story/revision/structural-suspense-ledger.md
+      sha256: 8b5e0fd7d96aeaeca4f688f5517b985e1db4d5fbfe31b5466b3cae3e13b5aa8c
+      chars: 4657
+      lines: 123
+updated_at: '2026-05-02T14:15:39Z'
+finalized_at: '2026-05-02T14:15:39Z'
